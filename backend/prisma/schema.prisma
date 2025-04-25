@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model MemoryBank {
+  id           Int        @id @default(autoincrement())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  title        String
+  content      String     @db.Text
+  category     String
+  tags         Json
+  priority     Int        @default(0)
+  status       String     @default("ACTIVE")
+  individualId Int
+  createdById  Int
+  updatedById  Int?
+  facilityId   Int
+  unitId       Int?
+  attachments  Json
+  metadata     Json?
+  createdBy    User       @relation("CreatedMemories", fields: [createdById], references: [id])
+  facility     Facility   @relation(fields: [facilityId], references: [id])
+  individual   Individual @relation(fields: [individualId], references: [id])
+  unit         Unit?      @relation(fields: [unitId], references: [id])
+  updatedBy    User?      @relation("UpdatedMemories", fields: [updatedById], references: [id])
+
+  @@index([individualId])
+  @@index([createdById])
+  @@index([facilityId])
+  @@index([unitId])
+  @@index([updatedById], map: "MemoryBank_updatedById_fkey")
+}
+
+model Facility {
+  id          Int          @id @default(autoincrement())
+  name        String
+  code        String       @unique
+  region      String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  individuals Individual[]
+  memoryBanks MemoryBank[]
+  units       Unit[]
+  users       User[]
+}
+
+model Unit {
+  id          Int          @id @default(autoincrement())
+  name        String
+  code        String
+  facilityId  Int
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  memoryBanks MemoryBank[]
+  facility    Facility     @relation(fields: [facilityId], references: [id])
+  users       User[]
+
+  @@unique([code, facilityId])
+  @@index([facilityId], map: "Unit_facilityId_fkey")
+}
+
+model User {
+  id              Int          @id @default(autoincrement())
+  username        String       @unique
+  password        String
+  firstName       String
+  lastName        String
+  badgeNumber     String       @unique
+  role            String
+  facilityId      Int
+  unitId          Int?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  profilePicture  String?
+  auditLogs       AuditLog[]
+  createdMemories MemoryBank[] @relation("CreatedMemories")
+  updatedMemories MemoryBank[] @relation("UpdatedMemories")
+  prompts         Prompt[]
+  facility        Facility     @relation(fields: [facilityId], references: [id])
+  unit            Unit?        @relation(fields: [unitId], references: [id])
+
+  @@index([facilityId], map: "User_facilityId_fkey")
+  @@index([unitId], map: "User_unitId_fkey")
+}
+
+model Individual {
+  id           Int                    @id @default(autoincrement())
+  cdcrNumber   String                 @unique
+  firstName    String
+  lastName     String
+  housingUnit  String
+  facilityId   Int
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  facility     Facility               @relation(fields: [facilityId], references: [id])
+  disabilities IndividualDisability[]
+  memoryBanks  MemoryBank[]
+  prompts      Prompt[]
+
+  @@index([facilityId], map: "Individual_facilityId_fkey")
+}
+
+model Disability {
+  id          Int                    @id @default(autoincrement())
+  type        String
+  description String                 @db.Text
+  code        String                 @unique
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  individuals IndividualDisability[]
+}
+
+model IndividualDisability {
+  id           Int        @id @default(autoincrement())
+  individualId Int
+  disabilityId Int
+  notes        String?    @db.Text
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  disability   Disability @relation(fields: [disabilityId], references: [id])
+  individual   Individual @relation(fields: [individualId], references: [id])
+
+  @@unique([individualId, disabilityId])
+  @@index([disabilityId], map: "IndividualDisability_disabilityId_fkey")
+}
+
+model PromptType {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String   @db.Text
+  category    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  prompts     Prompt[]
+}
+
+model Prompt {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  individualId Int
+  promptTypeId Int
+  status       String
+  notes        String?    @db.Text
+  location     String
+  deviceId     String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  individual   Individual @relation(fields: [individualId], references: [id])
+  promptType   PromptType @relation(fields: [promptTypeId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+
+  @@index([individualId], map: "Prompt_individualId_fkey")
+  @@index([promptTypeId], map: "Prompt_promptTypeId_fkey")
+  @@index([userId], map: "Prompt_userId_fkey")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  action     String
+  entityType String
+  entityId   Int
+  ipAddress  String
+  userAgent  String   @db.Text
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "AuditLog_userId_fkey")
+}

@@ -1,0 +1,30 @@
+// Custom Vuetify variables
+$color-pack: true;
+
+// Custom theme colors
+:root {
+  --v-theme-primary: #1976D2;
+  --v-theme-secondary: #424242;
+  --v-theme-accent: #82B1FF;
+  --v-theme-error: #FF5252;
+  --v-theme-info: #2196F3;
+  --v-theme-success: #4CAF50;
+  --v-theme-warning: #FFC107;
+}
+
+// Custom styles for Vuetify components
+.v-application {
+  background-color: rgb(250, 250, 250);
+}
+
+.v-card {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1) !important;
+  
+  &--elevated {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+  }
+}
+
+.v-list-item {
+  min-height: 44px;
+} 

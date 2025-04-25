@@ -1,0 +1,178 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  password     String
+  firstName    String
+  lastName     String
+  badgeNumber  String?   @unique
+  role         Role      @default(OFFICER)
+  facility     Facility  @relation(fields: [facilityId], references: [id])
+  facilityId   Int
+  unit         Unit?     @relation(fields: [unitId], references: [id])
+  unitId       Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLoginAt  DateTime?
+  isActive     Boolean   @default(true)
+  refreshToken String?
+  
+  prompts     Prompt[]
+  syncQueue   SyncQueue[]
+  auditLogs   AuditLog[]
+}
+
+model Individual {
+  id          Int       @id @default(autoincrement())
+  cdcrNumber  String    @unique
+  firstName   String
+  lastName    String
+  housingUnit String
+  facility    Facility  @relation(fields: [facilityId], references: [id])
+  facilityId  Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isActive    Boolean   @default(true)
+  
+  disabilities IndividualDisability[]
+  prompts      Prompt[]
+}
+
+model Disability {
+  id          Int       @id @default(autoincrement())
+  type        String
+  description String?
+  code        String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  individuals IndividualDisability[]
+}
+
+model IndividualDisability {
+  id           Int        @id @default(autoincrement())
+  individual   Individual @relation(fields: [individualId], references: [id], onDelete: Cascade)
+  individualId Int
+  disability   Disability @relation(fields: [disabilityId], references: [id])
+  disabilityId Int
+  notes        String?    @db.Text
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  
+  @@unique([individualId, disabilityId])
+}
+
+model Facility {
+  id        Int       @id @default(autoincrement())
+  name      String
+  code      String    @unique
+  region    String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  users       User[]
+  units       Unit[]
+  individuals Individual[]
+}
+
+model Unit {
+  id         Int      @id @default(autoincrement())
+  name       String
+  code       String
+  facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  facilityId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  users User[]
+  
+  @@unique([facilityId, code])
+}
+
+model PromptType {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  category    String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  prompts Prompt[]
+}
+
+model Prompt {
+  id            Int         @id @default(autoincrement())
+  user          User        @relation(fields: [userId], references: [id])
+  userId        Int
+  individual    Individual  @relation(fields: [individualId], references: [id])
+  individualId  Int
+  promptType    PromptType  @relation(fields: [promptTypeId], references: [id])
+  promptTypeId  Int
+  status        PromptStatus
+  signatureData String?     @db.MediumText
+  notes         String?     @db.Text
+  createdAt     DateTime    @default(now())
+  location      String
+  deviceId      String?
+  syncedAt      DateTime?
+  updatedAt     DateTime    @updatedAt
+}
+
+model SyncQueue {
+  id            Int       @id @default(autoincrement())
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int
+  recordType    String
+  recordData    Json
+  status        SyncStatus @default(PENDING)
+  attemptCount  Int       @default(0)
+  errorMessage  String?   @db.Text
+  createdAt     DateTime  @default(now())
+  lastAttemptAt DateTime?
+  completedAt   DateTime?
+}
+
+model AuditLog {
+  id         Int       @id @default(autoincrement())
+  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId     Int?
+  action     String
+  entityType String?
+  entityId   Int?
+  details    Json?
+  ipAddress  String?   @db.VarChar(45)
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+}
+
+enum Role {
+  ADMIN
+  SUPERVISOR
+  OFFICER
+  MEDICAL
+}
+
+enum PromptStatus {
+  SIGNED
+  REFUSED
+  ATTEMPTED
+  PENDING
+}
+
+enum SyncStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
