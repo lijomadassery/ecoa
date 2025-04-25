@@ -2,7 +2,7 @@
   <v-app>
     <!-- App Bar -->
     <v-app-bar
-      v-if="isAuthenticated"
+      v-if="isAuthenticated && !isAppDashboard"
       color="primary"
       elevation="1"
     >
@@ -60,11 +60,13 @@
 
     <!-- Navigation Drawer -->
     <v-navigation-drawer
-      v-if="isAuthenticated"
+      v-if="isAuthenticated && !isAppDashboard"
       v-model="drawer"
       :rail="rail"
+      @click="rail = false"
       permanent
-      elevation="1"
+      elevation="0"
+      border="0"
     >
       <!-- User Info -->
       <div class="px-2 py-3">
@@ -127,19 +129,27 @@
 
     <!-- Main Content -->
     <v-main>
-      <v-container 
-        :class="[
-          'pa-4',
-          { 'px-2': $vuetify.display.smAndDown }
-        ]"
-        fluid
-      >
-        <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
+      <!-- Use router-view with slot for both cases -->
+      <router-view v-slot="{ Component }">
+        <transition name="fade" mode="out-in">
+          <!-- For the app dashboard view, render without container -->
+          <div v-if="isAppDashboard" class="app-dashboard-wrapper">
             <component :is="Component" />
-          </transition>
-        </router-view>
-      </v-container>
+          </div>
+          
+          <!-- For all other views, use the standard container -->
+          <v-container 
+            v-else
+            :class="[
+              'pa-4',
+              { 'px-2': $vuetify.display.smAndDown }
+            ]"
+            fluid
+          >
+            <component :is="Component" />
+          </v-container>
+        </transition>
+      </router-view>
     </v-main>
 
     <!-- Offline Sync Status -->
@@ -208,6 +218,7 @@ const filteredNavigationItems = computed(() => {
 });
 
 // Computed
+const isAppDashboard = computed(() => route.name === 'AppDashboard')
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const userFullName = computed(() => {
   const user = authStore.user
@@ -304,11 +315,16 @@ const showNotifications = () => {
 /* Transition effects */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.3s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.app-dashboard-wrapper {
+  height: 100%;
+  width: 100%;
 }
 </style> 

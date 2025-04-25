@@ -10,19 +10,26 @@ const Prompts = () => import('@/views/prompts/PromptsView.vue')
 const NewPrompt = () => import('@/views/prompts/NewPrompt.vue')
 const Reports = () => import('@/views/reports/ReportsView.vue')
 const Settings = () => import('@/views/settings/SettingsView.vue')
-const UserProfile = () => import('@/views/profile/UserProfileView.vue')
+const UserProfile = () => import('@/views/profile/UserProfile.vue')
 const Admin = () => import('@/views/admin/AdminView.vue')
+const AppDashboard = () => import('@/views/app-dashboard/AppDashboard.vue')
 
 const routes = [
   {
     path: '/',
-    redirect: '/dashboard'
+    redirect: '/apps'
   },
   {
     path: '/login',
     name: 'Login',
     component: Login,
     meta: { requiresAuth: false }
+  },
+  {
+    path: '/apps',
+    name: 'AppDashboard',
+    component: AppDashboard,
+    meta: { requiresAuth: true }
   },
   {
     path: '/dashboard',
@@ -100,9 +107,9 @@ router.beforeEach((to, from, next) => {
   if (requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   } else if (requiresAdmin && authStore.userRole !== 'ADMIN') {
-    next('/dashboard')
+    next('/apps')
   } else if (to.path === '/login' && authStore.isAuthenticated) {
-    next('/dashboard')
+    next('/apps')
   } else {
     next()
   }
