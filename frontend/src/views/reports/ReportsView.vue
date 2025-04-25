@@ -8,24 +8,73 @@
         <!-- Date Range Picker -->
         <div class="d-flex align-center">
           <v-menu
-            v-model="showDatePicker"
-            :close-on-content-click="false"
+            v-model="showRangeMenu"
+            :close-on-content-click="true"
+            location="bottom end"
           >
             <template v-slot:activator="{ props }">
               <v-btn
-                color="primary"
                 v-bind="props"
-                prepend-icon="mdi-calendar"
+                density="comfortable"
                 variant="tonal"
+                size="small"
+                color="primary"
+                class="text-none"
               >
-                {{ formatDateRange }}
+                {{ dateRanges[selectedDateRange].label }}
+                <v-icon icon="mdi-chevron-down" end></v-icon>
               </v-btn>
             </template>
-            <v-date-picker
-              v-model="dateRange"
-              range
-              @update:model-value="showDatePicker = false"
-            ></v-date-picker>
+            <v-list density="compact" nav class="pa-2">
+              <v-list-item
+                v-for="(range, key) in dateRanges"
+                :key="key"
+                :value="key"
+                :title="range.label"
+                @click="selectedDateRange = key as DateRangeKey"
+                :active="selectedDateRange === key"
+                active-color="primary"
+              ></v-list-item>
+            </v-list>
+          </v-menu>
+          
+          <div class="date-display px-2 d-flex align-center">
+            <div class="text-body-2">{{ dateRangeText }}</div>
+          </div>
+          
+          <v-menu
+            v-model="showCalendarMenu"
+            :close-on-content-click="false"
+            v-if="selectedDateRange === 'custom'"
+          >
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-calendar-edit"
+                variant="text"
+                density="comfortable"
+                color="primary"
+              ></v-btn>
+            </template>
+            <v-card min-width="300">
+              <v-card-text>
+                <v-row dense>
+                  <v-col cols="12">
+                    <v-date-picker
+                      v-model="dateRange"
+                      range
+                      density="compact"
+                      color="primary"
+                      @update:model-value="updateDateRange"
+                    ></v-date-picker>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="primary" text @click="showCalendarMenu = false">Done</v-btn>
+              </v-card-actions>
+            </v-card>
           </v-menu>
           
           <v-btn
@@ -205,19 +254,44 @@ import { ReportsService, type PromptCompletionStats, type IndividualActivityStat
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { LineChart } from 'echarts/charts'
+import { LineChart, BarChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
+import { 
+  format, 
+  isWithinInterval, 
+  startOfDay, 
+  endOfDay, 
+  parseISO, 
+  subDays, 
+  startOfWeek, 
+  endOfWeek, 
+  subWeeks, 
+  startOfMonth, 
+  endOfMonth, 
+  subMonths
+} from 'date-fns'
 
 // Register ECharts components
-use([CanvasRenderer, LineChart, GridComponent, TooltipComponent, LegendComponent])
+use([CanvasRenderer, LineChart, BarChart, GridComponent, TooltipComponent, LegendComponent])
+
+// Define date range type
+type DateRangeKey = 'today' | 'yesterday' | 'thisWeek' | 'lastWeek' | 'lastMonth' | 'custom';
+
+interface DateRange {
+  start: Date;
+  end: Date;
+  label: string;
+}
 
 // State
 const activeTab = ref('completion')
+const selectedDateRange = ref<DateRangeKey>('thisWeek')
+const showRangeMenu = ref(false)
+const showCalendarMenu = ref(false)
 const showDatePicker = ref(false)
-const dateRange = ref([
-  new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().substr(0, 10),
-  new Date().toISOString().substr(0, 10)
-])
+const startDate = ref(format(subDays(new Date(), 7), 'yyyy-MM-dd'))
+const endDate = ref(format(new Date(), 'yyyy-MM-dd'))
+const dateRange = ref([startDate.value, endDate.value])
 const search = ref('')
 
 const completionStats = ref<PromptCompletionStats | null>(null)
@@ -258,6 +332,56 @@ const staffHeaders = [
 ] as const
 
 // Computed
+const dateRanges = computed<Record<DateRangeKey, DateRange>>(() => {
+  const today = new Date()
+  
+  return {
+    today: {
+      start: startOfDay(today),
+      end: endOfDay(today),
+      label: 'Today'
+    },
+    yesterday: {
+      start: startOfDay(subDays(today, 1)),
+      end: endOfDay(subDays(today, 1)),
+      label: 'Yesterday'
+    },
+    thisWeek: {
+      start: startOfWeek(today, { weekStartsOn: 0 }),
+      end: endOfWeek(today, { weekStartsOn: 0 }),
+      label: 'This Week'
+    },
+    lastWeek: {
+      start: startOfWeek(subWeeks(today, 1), { weekStartsOn: 0 }),
+      end: endOfWeek(subWeeks(today, 1), { weekStartsOn: 0 }),
+      label: 'Last Week'
+    },
+    lastMonth: {
+      start: startOfMonth(subMonths(today, 1)),
+      end: endOfMonth(subMonths(today, 1)),
+      label: 'Last Month'
+    },
+    custom: {
+      start: parseISO(startDate.value),
+      end: endOfDay(parseISO(endDate.value)),
+      label: 'Custom Range'
+    }
+  }
+})
+
+const dateRangeText = computed(() => {
+  if (selectedDateRange.value === 'custom') {
+    return `${format(parseISO(startDate.value), 'MMM d, yyyy')} - ${format(parseISO(endDate.value), 'MMM d, yyyy')}`
+  }
+  
+  const range = dateRanges.value[selectedDateRange.value]
+  if (selectedDateRange.value === 'today' || selectedDateRange.value === 'yesterday') {
+    return format(range.start, 'MMM d, yyyy')
+  }
+  
+  return `${format(range.start, 'MMM d, yyyy')} - ${format(range.end, 'MMM d, yyyy')}`
+})
+
 const formatDateRange = computed(() => {
   if (dateRange.value.length !== 2) return 'Select dates'
   return `${formatDate(dateRange.value[0])} - ${formatDate(dateRange.value[1])}`
@@ -273,7 +397,10 @@ const chartOption = computed(() => {
 
   return {
     tooltip: {
-      trigger: 'axis'
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow'
+      }
     },
     legend: {
       data: ['Completed', 'Pending', 'Refused']
@@ -286,8 +413,11 @@ const chartOption = computed(() => {
     },
     xAxis: {
       type: 'category',
-      boundaryGap: false,
-      data: dates
+      data: dates,
+      axisLabel: {
+        rotate: dates.length > 7 ? 45 : 0, // Rotate labels if many dates
+        fontSize: 10
+      }
     },
     yAxis: {
       type: 'value'
@@ -295,21 +425,36 @@ const chartOption = computed(() => {
     series: [
       {
         name: 'Completed',
-        type: 'line',
+        type: 'bar',
         data: completed,
-        color: '#4CAF50'
+        color: '#4CAF50',
+        stack: 'total',
+        barWidth: '40%', // Make bars narrower
+        emphasis: {
+          focus: 'series'
+        }
       },
       {
         name: 'Pending',
-        type: 'line',
+        type: 'bar',
         data: pending,
-        color: '#FFC107'
+        color: '#FFC107',
+        stack: 'total',
+        barWidth: '40%', // Make bars narrower
+        emphasis: {
+          focus: 'series'
+        }
       },
       {
         name: 'Refused',
-        type: 'line',
+        type: 'bar',
         data: refused,
-        color: '#F44336'
+        color: '#F44336',
+        stack: 'total',
+        barWidth: '40%', // Make bars narrower
+        emphasis: {
+          focus: 'series'
+        }
       }
     ]
   }
@@ -322,7 +467,8 @@ const getStaffCompletionRate = (item: StaffPerformanceStats): string => {
 
 // Methods
 const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString()
+  if (!date) return ''
+  return format(new Date(date), 'MMM d, yyyy')
 }
 
 const formatDuration = (minutes: number) => {
@@ -338,15 +484,28 @@ const getCompletionRateColor = (rate: number) => {
   return 'error'
 }
 
+const updateDateRange = (range: string[]) => {
+  if (range && range.length === 2) {
+    startDate.value = range[0]
+    endDate.value = range[1]
+  }
+}
+
 const fetchCompletionStats = async () => {
-  if (!dateRange.value[0] || !dateRange.value[1]) return
+  let start, end
+  
+  if (selectedDateRange.value === 'custom') {
+    start = startDate.value
+    end = endDate.value
+  } else {
+    const range = dateRanges.value[selectedDateRange.value]
+    start = format(range.start, 'yyyy-MM-dd')
+    end = format(range.end, 'yyyy-MM-dd')
+  }
   
   isLoading.value.completion = true
   try {
-    completionStats.value = await ReportsService.getPromptCompletionStats(
-      dateRange.value[0],
-      dateRange.value[1]
-    )
+    completionStats.value = await ReportsService.getPromptCompletionStats(start, end)
   } catch (error) {
     console.error('Error fetching completion stats:', error)
   } finally {
@@ -355,14 +514,20 @@ const fetchCompletionStats = async () => {
 }
 
 const fetchIndividualStats = async () => {
-  if (!dateRange.value[0] || !dateRange.value[1]) return
+  let start, end
+  
+  if (selectedDateRange.value === 'custom') {
+    start = startDate.value
+    end = endDate.value
+  } else {
+    const range = dateRanges.value[selectedDateRange.value]
+    start = format(range.start, 'yyyy-MM-dd')
+    end = format(range.end, 'yyyy-MM-dd')
+  }
   
   isLoading.value.individual = true
   try {
-    individualStats.value = await ReportsService.getIndividualActivityStats(
-      dateRange.value[0],
-      dateRange.value[1]
-    )
+    individualStats.value = await ReportsService.getIndividualActivityStats(start, end)
   } catch (error) {
     console.error('Error fetching individual stats:', error)
   } finally {
@@ -371,14 +536,20 @@ const fetchIndividualStats = async () => {
 }
 
 const fetchStaffStats = async () => {
-  if (!dateRange.value[0] || !dateRange.value[1]) return
+  let start, end
+  
+  if (selectedDateRange.value === 'custom') {
+    start = startDate.value
+    end = endDate.value
+  } else {
+    const range = dateRanges.value[selectedDateRange.value]
+    start = format(range.start, 'yyyy-MM-dd')
+    end = format(range.end, 'yyyy-MM-dd')
+  }
   
   isLoading.value.staff = true
   try {
-    staffStats.value = await ReportsService.getStaffPerformanceStats(
-      dateRange.value[0],
-      dateRange.value[1]
-    )
+    staffStats.value = await ReportsService.getStaffPerformanceStats(start, end)
   } catch (error) {
     console.error('Error fetching staff stats:', error)
   } finally {
@@ -401,9 +572,27 @@ const refreshData = () => {
 }
 
 // Watchers
-watch(dateRange, () => {
-  if (dateRange.value.length === 2) {
+watch(selectedDateRange, (newValue) => {
+  if (newValue === 'custom') {
+    startDate.value = format(new Date(), 'yyyy-MM-dd')
+    endDate.value = format(new Date(), 'yyyy-MM-dd')
+    dateRange.value = [startDate.value, endDate.value]
+  } else {
     refreshData()
+  }
+})
+
+watch([startDate, endDate], () => {
+  if (selectedDateRange.value === 'custom') {
+    refreshData()
+  }
+})
+
+// Original dateRange watcher for backward compatibility
+watch(dateRange, () => {
+  if (dateRange.value.length === 2 && selectedDateRange.value === 'custom') {
+    startDate.value = dateRange.value[0]
+    endDate.value = dateRange.value[1]
   }
 })
 

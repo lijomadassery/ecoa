@@ -74,6 +74,13 @@
 
               <template v-slot:append>
                 <v-btn
+                  icon="mdi-information"
+                  variant="text"
+                  color="primary"
+                  class="me-1"
+                  @click.stop="showIndividualDetails(individual.id)"
+                ></v-btn>
+                <v-btn
                   icon="mdi-chevron-right"
                   variant="text"
                   color="primary"
@@ -84,6 +91,12 @@
         </v-col>
       </v-row>
     </v-container>
+
+    <!-- Individual Details Modal -->
+    <individual-details-modal
+      v-model="showDetailsModal"
+      :individual-id="selectedIndividualId"
+    />
 
     <!-- Bottom Navigation -->
     <v-bottom-navigation grow color="primary">
@@ -108,6 +121,7 @@ import { usePromptStore } from '@/store/prompts'
 import { useToast } from 'vue-toastification'
 import type { Individual } from '@/types'
 import { debounce } from 'lodash'
+import IndividualDetailsModal from '@/components/IndividualDetailsModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -119,6 +133,8 @@ const toast = useToast()
 // State
 const searchQuery = ref('')
 const selectedUnit = ref('all')
+const showDetailsModal = ref(false)
+const selectedIndividualId = ref<string | null>(null)
 
 // Get the prompt type ID from the route
 const promptTypeId = computed(() => {
@@ -170,6 +186,11 @@ const navigateToDetails = (id: string) => {
     // Otherwise, go to individual details
     router.push(`/roster/${id}`);
   }
+}
+
+const showIndividualDetails = (id: string) => {
+  selectedIndividualId.value = id;
+  showDetailsModal.value = true;
 }
 
 const navigateToHistory = () => {
