@@ -341,6 +341,7 @@ async function main() {
           lastName: 'Doe',
           housingUnit: 'A-202',
           facilityId: facilities[0].id,
+          profilePicture: 'https://randomuser.me/api/portraits/men/32.jpg',
         },
         create: {
           cdcrNumber: 'AZ1234',
@@ -348,6 +349,7 @@ async function main() {
           lastName: 'Doe',
           housingUnit: 'A-202',
           facilityId: facilities[0].id,
+          profilePicture: 'https://randomuser.me/api/portraits/men/32.jpg',
         },
       }),
       prisma.individual.upsert({
@@ -359,6 +361,7 @@ async function main() {
           lastName: 'Smith',
           housingUnit: 'A-105',
           facilityId: facilities[0].id,
+          profilePicture: 'https://randomuser.me/api/portraits/men/45.jpg',
         },
         create: {
           cdcrNumber: 'BK2345',
@@ -366,6 +369,7 @@ async function main() {
           lastName: 'Smith',
           housingUnit: 'A-105',
           facilityId: facilities[0].id,
+          profilePicture: 'https://randomuser.me/api/portraits/men/45.jpg',
         },
       }),
       prisma.individual.upsert({
@@ -377,6 +381,7 @@ async function main() {
           lastName: 'Jones',
           housingUnit: 'B-310',
           facilityId: facilities[0].id,
+          profilePicture: 'https://randomuser.me/api/portraits/men/61.jpg',
         },
         create: {
           cdcrNumber: 'CL3456',
@@ -384,6 +389,7 @@ async function main() {
           lastName: 'Jones',
           housingUnit: 'B-310',
           facilityId: facilities[0].id,
+          profilePicture: 'https://randomuser.me/api/portraits/men/61.jpg',
         },
       }),
       prisma.individual.upsert({
@@ -395,6 +401,7 @@ async function main() {
           lastName: 'Wilson',
           housingUnit: 'B-115',
           facilityId: facilities[0].id,
+          profilePicture: 'https://randomuser.me/api/portraits/men/71.jpg',
         },
         create: {
           cdcrNumber: 'DM4567',
@@ -402,6 +409,7 @@ async function main() {
           lastName: 'Wilson',
           housingUnit: 'B-115',
           facilityId: facilities[0].id,
+          profilePicture: 'https://randomuser.me/api/portraits/men/71.jpg',
         },
       }),
       prisma.individual.upsert({
@@ -413,6 +421,7 @@ async function main() {
           lastName: 'Brown',
           housingUnit: 'NB-205',
           facilityId: facilities[1].id,
+          profilePicture: 'https://randomuser.me/api/portraits/men/22.jpg',
         },
         create: {
           cdcrNumber: 'EN5678',
@@ -420,6 +429,7 @@ async function main() {
           lastName: 'Brown',
           housingUnit: 'NB-205',
           facilityId: facilities[1].id,
+          profilePicture: 'https://randomuser.me/api/portraits/men/22.jpg',
         },
       }),
       prisma.individual.upsert({
@@ -431,6 +441,7 @@ async function main() {
           lastName: 'Davis',
           housingUnit: 'NB-302',
           facilityId: facilities[1].id,
+          profilePicture: 'https://randomuser.me/api/portraits/men/91.jpg',
         },
         create: {
           cdcrNumber: 'FO6789',
@@ -438,6 +449,7 @@ async function main() {
           lastName: 'Davis',
           housingUnit: 'NB-302',
           facilityId: facilities[1].id,
+          profilePicture: 'https://randomuser.me/api/portraits/men/91.jpg',
         },
       }),
     ]);

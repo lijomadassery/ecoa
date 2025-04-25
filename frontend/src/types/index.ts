@@ -44,6 +44,7 @@ export interface Individual {
   cdcrNumber: string
   housingUnit: string
   facilityId: string
+  profilePicture?: string
   disabilities?: Disability[]
   createdAt: string
   updatedAt: string

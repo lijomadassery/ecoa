@@ -28,7 +28,13 @@
           <v-row>
             <v-col cols="12" class="d-flex justify-center mb-3">
               <v-avatar color="primary" size="80">
-                <span class="text-h4 text-white">
+                <v-img
+                  v-if="individual.profilePicture"
+                  :src="individual.profilePicture"
+                  :alt="`${individual.firstName} ${individual.lastName}`"
+                  cover
+                ></v-img>
+                <span v-else class="text-h4 text-white">
                   {{ getInitials(individual.firstName, individual.lastName) }}
                 </span>
               </v-avatar>

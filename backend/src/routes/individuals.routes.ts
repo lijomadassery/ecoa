@@ -154,7 +154,7 @@ router.patch('/:id', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Invalid ID format' });
     }
     
-    const { firstName, lastName, housingUnit, facilityId, disabilities } = req.body;
+    const { firstName, lastName, housingUnit, facilityId, disabilities, profilePicture } = req.body;
     const userId = req.user?.id;
     
     if (!userId) {
@@ -168,7 +168,8 @@ router.patch('/:id', authMiddleware, async (req, res) => {
         ...(firstName && { firstName }),
         ...(lastName && { lastName }),
         ...(housingUnit && { housingUnit }),
-        ...(facilityId && { facilityId: Number(facilityId) })
+        ...(facilityId && { facilityId: Number(facilityId) }),
+        ...(profilePicture !== undefined && { profilePicture })
       }
     });
     
@@ -218,6 +219,51 @@ router.patch('/:id', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error updating individual:', error);
     res.status(500).json({ error: 'Failed to update individual' });
+  }
+});
+
+// Update an individual's profile picture
+router.patch('/:id/profile-picture', authMiddleware, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid ID format' });
+    }
+    
+    const { profilePicture } = req.body;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+    
+    // Validate profile picture URL
+    if (!profilePicture) {
+      return res.status(400).json({ error: 'Profile picture URL is required' });
+    }
+    
+    // Update only the profile picture
+    const updatedIndividual = await prisma.individual.update({
+      where: { id },
+      data: { profilePicture }
+    });
+    
+    // Create audit log
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action: 'UPDATE_PROFILE_PICTURE',
+        entityType: 'INDIVIDUAL',
+        entityId: id,
+        ipAddress: req.ip || '',
+        userAgent: req.get('user-agent') || ''
+      }
+    });
+    
+    res.json(updatedIndividual);
+  } catch (error) {
+    console.error('Error updating profile picture:', error);
+    res.status(500).json({ error: 'Failed to update profile picture' });
   }
 });
 

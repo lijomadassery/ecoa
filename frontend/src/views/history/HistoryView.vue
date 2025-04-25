@@ -135,7 +135,12 @@
                 <v-card-item class="pa-3">
                   <template v-slot:prepend>
                     <v-avatar color="grey-lighten-3" size="40" class="mr-3">
-                      <span class="text-body-2">{{ getInitials(prompt.individual.firstName, prompt.individual.lastName) }}</span>
+                      <v-img
+                        v-if="prompt.individual.profilePicture"
+                        :src="prompt.individual.profilePicture"
+                        :alt="`${prompt.individual.firstName} ${prompt.individual.lastName}`"
+                      ></v-img>
+                      <span v-else class="text-body-2">{{ getInitials(prompt.individual.firstName, prompt.individual.lastName) }}</span>
                     </v-avatar>
                   </template>
 

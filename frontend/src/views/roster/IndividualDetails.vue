@@ -12,7 +12,12 @@
         <v-card-item>
           <template v-slot:prepend>
             <v-avatar color="grey-lighten-1" size="48">
-              <span class="text-h6">{{ getInitials(individual?.firstName || '', individual?.lastName || '') }}</span>
+              <v-img
+                v-if="individual?.profilePicture"
+                :src="individual.profilePicture"
+                :alt="`${individual?.firstName} ${individual?.lastName}`"
+              ></v-img>
+              <span v-else class="text-h6">{{ getInitials(individual?.firstName || '', individual?.lastName || '') }}</span>
             </v-avatar>
           </template>
           <v-card-title>{{ individual?.firstName }} {{ individual?.lastName }}</v-card-title>

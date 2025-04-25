@@ -48,7 +48,12 @@
             >
               <template v-slot:prepend>
                 <v-avatar :color="getStatusColor(prompt.status)" size="36" class="mr-3">
-                  <span class="text-caption text-white">{{ getInitials(prompt.individual.firstName, prompt.individual.lastName) }}</span>
+                  <v-img
+                    v-if="prompt.individual.profilePicture"
+                    :src="prompt.individual.profilePicture"
+                    :alt="`${prompt.individual.firstName} ${prompt.individual.lastName}`"
+                  ></v-img>
+                  <span v-else class="text-caption text-white">{{ getInitials(prompt.individual.firstName, prompt.individual.lastName) }}</span>
                 </v-avatar>
               </template>
               
@@ -208,15 +213,21 @@ const refreshPrompts = () => {
 }
 
 const formatHeaderDate = (date: string) => {
+  // Parse the formatted date string correctly
+  const dateParts = date.split(' ')
+  const month = dateParts[0]
+  const day = parseInt(dateParts[1].replace(',', ''))
+  const year = parseInt(dateParts[2])
+  
+  const dateObj = new Date(year, ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(month), day)
+  
   const today = new Date()
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
   
-  const dateObj = new Date(date)
-  
-  if (format(dateObj, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
+  if (format(today, 'yyyy-MM-dd') === format(dateObj, 'yyyy-MM-dd')) {
     return 'Today'
-  } else if (format(dateObj, 'yyyy-MM-dd') === format(yesterday, 'yyyy-MM-dd')) {
+  } else if (format(yesterday, 'yyyy-MM-dd') === format(dateObj, 'yyyy-MM-dd')) {
     return 'Yesterday'
   }
   
@@ -225,7 +236,7 @@ const formatHeaderDate = (date: string) => {
 
 const formatTime = (dateTime: Date | string) => {
   const date = new Date(dateTime)
-  return format(date, 'h:mm a')
+  return format(date, 'MMM d, yyyy • HH:mm')
 }
 
 const getStatusColor = (status: string): string => {
