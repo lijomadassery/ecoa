@@ -62,16 +62,21 @@
             </v-card>
 
             <!-- Signature Area -->
-            <v-card class="mb-4" rounded="lg">
+            <v-card class="mb-4" rounded="lg" id="signatureCard">
               <v-card-title class="text-subtitle-1 px-4 pt-4">
                 Capture Signature
               </v-card-title>
               
               <v-card-text>
-                <div class="signature-container" ref="signaturePad">
+                <div class="signature-container">
                   <canvas 
-                    ref="canvas" 
+                    id="signatureCanvas"
+                    ref="canvasElement"
                     class="signature-canvas"
+                    @mousedown="startDrawing"
+                    @mousemove="draw"
+                    @mouseup="stopDrawing"
+                    @mouseleave="stopDrawing"
                   ></canvas>
                   <div class="d-flex align-center justify-space-between px-2 mt-2">
                     <span class="text-caption text-medium-emphasis">Sign above</span>
@@ -132,11 +137,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useRosterStore } from '@/store/roster'
 import { useAuthStore } from '@/store/auth'
 import { usePromptStore } from '@/store/prompts'
+import { PromptsService } from '@/services/prompts.service'
 import { format } from 'date-fns'
 
 const router = useRouter()
@@ -148,11 +154,16 @@ const promptStore = usePromptStore()
 // State
 const loading = ref(true)
 const saving = ref(false)
-const signaturePad = ref<HTMLDivElement | null>(null)
-const canvas = ref<HTMLCanvasElement | null>(null)
-const ctx = ref<CanvasRenderingContext2D | null>(null)
+const canvasElement = ref<HTMLCanvasElement | null>(null)
+const canvasContext = ref<CanvasRenderingContext2D | null>(null)
 const promptTime = ref(format(new Date(), 'HH:mm'))
 const promptMeal = ref('Breakfast')
+
+// Drawing state
+let isDrawing = false
+let lastX = 0
+let lastY = 0
+let hasSignature = false
 
 // Computed
 const individual = computed(() => rosterStore.selectedIndividual)
@@ -187,89 +198,78 @@ const formattedPromptContent = computed(() => {
 
 const currentTime = computed(() => format(new Date(), 'h:mm a - MMMM d, yyyy'))
 
-// Canvas handling
-let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
-let hasSignature = false;
+// Watch for canvas element to be available
+watch(canvasElement, (newCanvas) => {
+  if (newCanvas) {
+    console.log('Canvas element is now available, initializing');
+    initializeCanvas();
+  }
+});
 
-// Methods
-function initCanvas() {
-  console.log('Initializing canvas - DOM elements:', { 
-    canvas: canvas.value !== null, 
-    container: signaturePad.value !== null 
-  });
-  
-  if (!canvas.value) {
-    console.error('Canvas element not found in initCanvas');
+// Canvas methods
+function initializeCanvas() {
+  if (!canvasElement.value) {
+    console.error('Canvas element is still not available');
     return;
   }
-
-  // Set canvas size
-  const container = signaturePad.value;
+  
+  console.log('Initializing canvas element', canvasElement.value);
+  
+  // Set canvas size based on container width
+  const container = document.querySelector('.signature-container');
   if (container) {
-    const width = container.clientWidth - 16; // Adjusted for padding
-    const height = 200;
-    canvas.value.width = width;
-    canvas.value.height = height;
-    console.log(`Canvas size set to ${width}x${height}`);
+    const width = container.clientWidth - 16;
+    canvasElement.value.width = width;
+    canvasElement.value.height = 200;
+    console.log(`Canvas size set to ${width}x200`);
   }
-
-  // Get context
-  ctx.value = canvas.value.getContext('2d');
-  if (ctx.value) {
-    // Canvas setup
-    ctx.value.strokeStyle = '#000';
-    ctx.value.lineWidth = 2.5;
-    ctx.value.lineCap = 'round';
-    ctx.value.lineJoin = 'round';
-    
-    // Clear the canvas
-    ctx.value.clearRect(0, 0, canvas.value.width, canvas.value.height);
-    
-    // Draw a light gray border to indicate the signing area
-    ctx.value.save();
-    ctx.value.strokeStyle = '#e0e0e0';
-    ctx.value.lineWidth = 1;
-    ctx.value.rect(0, 0, canvas.value.width, canvas.value.height);
-    ctx.value.stroke();
-    ctx.value.restore();
-    
-    console.log('Canvas context initialized');
-    
-    // Setup event listeners
-    canvas.value.addEventListener('pointerdown', startDrawing);
-    canvas.value.addEventListener('pointermove', draw);
-    canvas.value.addEventListener('pointerup', stopDrawing);
-    canvas.value.addEventListener('pointerleave', stopDrawing);
-  } else {
+  
+  // Get the canvas context
+  canvasContext.value = canvasElement.value.getContext('2d');
+  
+  if (!canvasContext.value) {
     console.error('Failed to get canvas context');
+    return;
   }
+  
+  // Configure context
+  canvasContext.value.strokeStyle = '#000';
+  canvasContext.value.lineWidth = 2.5;
+  canvasContext.value.lineCap = 'round';
+  canvasContext.value.lineJoin = 'round';
+  
+  // Clear the canvas initially
+  clearSignature();
+  
+  console.log('Canvas initialized successfully');
 }
 
-function startDrawing(e: PointerEvent) {
-  e.preventDefault();
+function startDrawing(e: MouseEvent) {
+  if (!canvasElement.value || !canvasContext.value) return;
+  
   isDrawing = true;
-  const pos = getEventPosition(e);
-  lastX = pos.x;
-  lastY = pos.y;
+  
+  const rect = canvasElement.value.getBoundingClientRect();
+  lastX = e.clientX - rect.left;
+  lastY = e.clientY - rect.top;
+  
+  console.log('Started drawing at', { lastX, lastY });
 }
 
-function draw(e: PointerEvent) {
-  if (!isDrawing || !ctx.value || !canvas.value) return;
-  e.preventDefault();
+function draw(e: MouseEvent) {
+  if (!isDrawing || !canvasContext.value || !canvasElement.value) return;
   
-  const pos = getEventPosition(e);
+  const rect = canvasElement.value.getBoundingClientRect();
+  const currentX = e.clientX - rect.left;
+  const currentY = e.clientY - rect.top;
   
-  ctx.value.beginPath();
-  ctx.value.moveTo(lastX, lastY);
-  ctx.value.lineTo(pos.x, pos.y);
-  ctx.value.stroke();
+  canvasContext.value.beginPath();
+  canvasContext.value.moveTo(lastX, lastY);
+  canvasContext.value.lineTo(currentX, currentY);
+  canvasContext.value.stroke();
   
-  lastX = pos.x;
-  lastY = pos.y;
-  
-  // Mark that we have a signature
+  lastX = currentX;
+  lastY = currentY;
   hasSignature = true;
 }
 
@@ -277,43 +277,25 @@ function stopDrawing() {
   isDrawing = false;
 }
 
-function getEventPosition(e: PointerEvent) {
-  if (!canvas.value) return { x: 0, y: 0 };
-  
-  const rect = canvas.value.getBoundingClientRect();
-  return {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top
-  };
-}
-
-function cleanupCanvas() {
-  if (canvas.value) {
-    canvas.value.removeEventListener('pointerdown', startDrawing);
-    canvas.value.removeEventListener('pointermove', draw);
-    canvas.value.removeEventListener('pointerup', stopDrawing);
-    canvas.value.removeEventListener('pointerleave', stopDrawing);
-  }
-}
-
 function clearSignature() {
-  if (!canvas.value || !ctx.value) return;
-  ctx.value.clearRect(0, 0, canvas.value.width, canvas.value.height);
+  if (!canvasElement.value || !canvasContext.value) return;
   
-  // Draw the border again
-  ctx.value.save();
-  ctx.value.strokeStyle = '#e0e0e0';
-  ctx.value.lineWidth = 1;
-  ctx.value.rect(0, 0, canvas.value.width, canvas.value.height);
-  ctx.value.stroke();
-  ctx.value.restore();
+  canvasContext.value.clearRect(0, 0, canvasElement.value.width, canvasElement.value.height);
   
-  // Reset signature status
+  // Draw a light border to indicate the signing area
+  canvasContext.value.save();
+  canvasContext.value.strokeStyle = '#e0e0e0';
+  canvasContext.value.lineWidth = 1;
+  canvasContext.value.rect(0, 0, canvasElement.value.width, canvasElement.value.height);
+  canvasContext.value.stroke();
+  canvasContext.value.restore();
+  
   hasSignature = false;
 }
 
+// Form actions
 const saveSignature = async () => {
-  if (!canvas.value || !ctx.value || !individual.value || !promptTypeId.value) {
+  if (!canvasElement.value || !canvasContext.value || !individual.value || !promptTypeId.value) {
     console.error('Missing required data for saving signature');
     return;
   }
@@ -322,10 +304,10 @@ const saveSignature = async () => {
     saving.value = true;
     
     // Get signature data from canvas
-    const signatureData = canvas.value.toDataURL('image/png');
-    console.log('Captured signature data', { length: signatureData.length });
+    const signatureData = canvasElement.value.toDataURL('image/png');
     
-    await promptStore.createPrompt({
+    // Use the service directly to bypass the store's type limitations
+    await PromptsService.createPrompt({
       individualId: parseInt(individual.value.id),
       promptTypeId: promptTypeId.value,
       status: 'COMPLETED',
@@ -348,7 +330,7 @@ const markAsRefused = async () => {
   
   try {
     saving.value = true;
-    await promptStore.createPrompt({
+    await PromptsService.createPrompt({
       individualId: parseInt(individual.value.id),
       promptTypeId: promptTypeId.value,
       status: 'REFUSED',
@@ -370,7 +352,7 @@ const markAsAttempted = async () => {
   
   try {
     saving.value = true;
-    await promptStore.createPrompt({
+    await PromptsService.createPrompt({
       individualId: parseInt(individual.value.id),
       promptTypeId: promptTypeId.value,
       status: 'ATTEMPTED',
@@ -387,52 +369,40 @@ const markAsAttempted = async () => {
   }
 };
 
-// Lifecycle
+// Handle window resize
+function handleResize() {
+  initializeCanvas();
+}
+
+// Lifecycle hooks
 onMounted(async () => {
   try {
     loading.value = true;
+    console.log('Component mounted');
     
-    // Fetch individual
+    // Fetch individual data
     const individualId = route.params.id;
     if (individualId) {
       await rosterStore.fetchIndividualById(individualId as string);
     }
     
-    // Wait for DOM to be fully rendered and then initialize canvas
+    // Wait for next tick to ensure DOM is rendered
     await nextTick();
-    // Add additional delay to ensure DOM is ready
-    setTimeout(() => {
-      initCanvas();
-      loading.value = false;
-    }, 300);
     
+    // Add window resize event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Set loading to false - the canvas will initialize via the watcher
+    loading.value = false;
   } catch (error) {
     console.error('Error initializing prompt view:', error);
     loading.value = false;
   }
 });
 
-// Variable to store resize timer
-let resizeTimer: number;
-
 onUnmounted(() => {
-  cleanupCanvas();
-  window.removeEventListener('resize', initCanvas);
-  // Clear any pending resize timer
-  if (resizeTimer) {
-    clearTimeout(resizeTimer);
-  }
-});
-
-// Handle window resize
-window.addEventListener('resize', () => {
-  // Debounce resize event
-  if (resizeTimer) {
-    clearTimeout(resizeTimer);
-  }
-  resizeTimer = setTimeout(() => {
-    initCanvas();
-  }, 250) as unknown as number;
+  console.log('Component unmounting - cleaning up');
+  window.removeEventListener('resize', handleResize);
 });
 </script>
 
@@ -452,5 +422,7 @@ window.addEventListener('resize', () => {
   border-radius: 4px;
   touch-action: none;
   cursor: crosshair;
+  display: block;
+  background-color: rgba(250, 250, 250, 0.8);
 }
 </style> 
