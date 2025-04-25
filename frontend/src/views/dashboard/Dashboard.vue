@@ -138,12 +138,12 @@
                            style="cursor: pointer">
               <template v-slot:prepend>
                 <v-avatar
-                  :color="category.color"
+                  color="primary"
                   size="28"
                   variant="tonal"
                   rounded
                 >
-                  <v-icon :icon="category.icon" size="14" color="white"></v-icon>
+                  <v-icon :icon="category.icon" size="14" color="primary"></v-icon>
                 </v-avatar>
               </template>
               
@@ -349,14 +349,15 @@ const promptCategories = computed(() => {
 // Helper functions for category icons and colors
 const getCategoryIcon = (category: string): string => {
   const icons = {
-    'Medical': 'mdi-medical-bag',
-    'Meals': 'mdi-food',
-    'Yard': 'mdi-run',
-    'Visits': 'mdi-account-group',
-    'Programs': 'mdi-school'
+    'medical': 'mdi-medical-bag',
+    'meals': 'mdi-food',
+    'yard': 'mdi-run',
+    'visits': 'mdi-account-group',
+    'programs': 'mdi-school',
+    'general': 'mdi-bell'
   }
   
-  return icons[category] || 'mdi-shape'
+  return icons[category.toLowerCase()] || 'mdi-shape'
 }
 
 const getCategoryColor = (category: string): string => {

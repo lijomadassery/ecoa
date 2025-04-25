@@ -105,7 +105,7 @@ const apps = ref<AppItem[]>([
   {
     id: 'ecoa',
     name: 'ECOA',
-    description: 'Electronic Collection of Assessments',
+    description: 'Effective Communication of Announcements',
     icon: 'mdi-clipboard-text-outline',
     route: '/dashboard',
     enabled: true
