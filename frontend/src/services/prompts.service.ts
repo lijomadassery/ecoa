@@ -16,6 +16,7 @@ export interface Prompt {
   notes?: string;
   location: string;
   deviceId: string;
+  signatureData?: string;
   createdAt: Date;
   updatedAt: Date;
   individual: {
@@ -61,6 +62,7 @@ export class PromptsService {
     notes?: string;
     location: string;
     deviceId: string;
+    signatureData?: string;
   }): Promise<Prompt> {
     try {
       const response = await api.post<Prompt>('/prompts', data);

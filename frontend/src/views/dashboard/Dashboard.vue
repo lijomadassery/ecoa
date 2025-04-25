@@ -72,67 +72,11 @@
     <v-row>
       <!-- Recent Activity -->
       <v-col cols="12" md="8">
-        <v-card rounded="lg" class="mb-4">
-          <v-card-title class="d-flex align-center px-4 py-3">
-            <span class="text-h6">Recent Activity</span>
-            <v-spacer></v-spacer>
-            <v-btn
-              variant="text"
-              color="primary"
-              @click="navigateToHistory"
-              class="text-none"
-            >
-              View All
-              <v-icon end>mdi-chevron-right</v-icon>
-            </v-btn>
-          </v-card-title>
-
-          <v-list lines="two">
-            <template v-if="isLoading">
-              <v-list-item v-for="n in 3" :key="n">
-                <v-skeleton-loader type="list-item-avatar-two-line"></v-skeleton-loader>
-              </v-list-item>
-            </template>
-            <template v-else>
-              <v-list-item
-                v-for="activity in recentActivity"
-                :key="activity.id"
-                :subtitle="new Date(activity.createdAt).toLocaleString()"
-              >
-                <template v-slot:prepend>
-                  <v-avatar
-                    :color="getActivityStatus(activity)"
-                    size="40"
-                  >
-                    <v-img
-                      v-if="activity.user?.profilePicture"
-                      :src="activity.user.profilePicture"
-                      :alt="activity.user?.firstName"
-                    />
-                    <span v-else class="text-caption white--text">
-                      {{ activity.user ? `${activity.user.firstName[0]}${activity.user.lastName[0]}` : 'U' }}
-                    </span>
-                  </v-avatar>
-                </template>
-
-                <v-list-item-title class="font-weight-medium">
-                  {{ activity.user ? `${activity.user.firstName} ${activity.user.lastName}` : 'Unknown User' }}
-                </v-list-item-title>
-                <v-list-item-subtitle>
-                  {{ formatActivityAction(activity) }}
-                  <v-chip
-                    :color="getActivityStatus(activity)"
-                    size="x-small"
-                    class="ms-2"
-                    variant="tonal"
-                  >
-                    {{ activity.entityType }}
-                  </v-chip>
-                </v-list-item-subtitle>
-              </v-list-item>
-            </template>
-          </v-list>
-        </v-card>
+        <ActivityFeed 
+          :limit="10"
+          :refreshable="true"
+          :auto-refresh="false"
+        />
       </v-col>
 
       <!-- Quick Actions -->
@@ -192,15 +136,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import { useOfflineStore } from '@/store/offline'
-import { ActivityService, type ActivityLog } from '@/services/activity.service'
+import ActivityFeed from '@/components/ActivityFeed.vue'
+import { usePromptStore } from '@/store/prompts'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const offlineStore = useOfflineStore()
-
-// State
-const recentActivity = ref<ActivityLog[]>([])
-const isLoading = ref(false)
+const promptStore = usePromptStore()
 
 // Computed
 const isOffline = computed(() => offlineStore.isOffline)
@@ -211,46 +153,6 @@ const stats = ref({
   pendingPrompts: 8,
   completionRate: 92,
   activeIndividuals: 156
-})
-
-// Methods
-const fetchRecentActivity = async () => {
-  try {
-    isLoading.value = true
-    recentActivity.value = await ActivityService.getRecentActivity(10)
-  } catch (error) {
-    console.error('Error fetching recent activity:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const formatActivityAction = (activity: ActivityLog): string => {
-  const actionMap: Record<string, string> = {
-    'LOGIN': 'Logged in',
-    'LOGOUT': 'Logged out',
-    'PROMPT_DELIVERED': 'Delivered prompt',
-    'MEMORY_BANK_CREATED': 'Created memory bank entry'
-  }
-  return actionMap[activity.action] || activity.action
-}
-
-const getActivityStatus = (activity: ActivityLog): string => {
-  switch (activity.action) {
-    case 'LOGIN':
-      return 'success'
-    case 'LOGOUT':
-      return 'error'
-    case 'PROMPT_DELIVERED':
-      return 'info'
-    default:
-      return 'primary'
-  }
-}
-
-// Lifecycle
-onMounted(() => {
-  fetchRecentActivity()
 })
 
 const navigateToRoster = () => {
@@ -274,17 +176,5 @@ const navigateToNewPrompt = () => {
 
 .v-card {
   height: 100%;
-}
-
-.v-list-item {
-  padding: 12px 16px;
-}
-
-.v-avatar {
-  border: 2px solid transparent;
-}
-
-.v-avatar img {
-  object-fit: cover;
 }
 </style> 

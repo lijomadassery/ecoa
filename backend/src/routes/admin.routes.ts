@@ -145,11 +145,7 @@ router.post('/users', authMiddleware, isAdmin, async (req, res, next) => {
         action: 'CREATE_USER',
         entityType: 'USER',
         entityId: newUser.id,
-        details: JSON.stringify({
-          username: newUser.username,
-          role: newUser.role
-        }),
-        ipAddress: req.ip,
+        ipAddress: req.ip || '',
         userAgent: req.get('user-agent') || '',
       },
     });
@@ -221,11 +217,7 @@ router.put('/users/:id', authMiddleware, isAdmin, async (req, res, next) => {
         action: 'UPDATE_USER',
         entityType: 'USER',
         entityId: updatedUser.id,
-        details: JSON.stringify({
-          username: updatedUser.username,
-          role: updatedUser.role
-        }),
-        ipAddress: req.ip,
+        ipAddress: req.ip || '',
         userAgent: req.get('user-agent') || '',
       },
     });
@@ -283,10 +275,7 @@ router.post('/users/:id/reset-password', authMiddleware, isAdmin, async (req, re
         action: 'RESET_PASSWORD',
         entityType: 'USER',
         entityId: id,
-        details: JSON.stringify({
-          username: existingUser.username
-        }),
-        ipAddress: req.ip,
+        ipAddress: req.ip || '',
         userAgent: req.get('user-agent') || '',
       },
     });
@@ -333,11 +322,7 @@ router.patch('/users/:id/status', authMiddleware, isAdmin, async (req, res, next
         action: status === 'active' ? 'ACTIVATE_USER' : 'DEACTIVATE_USER',
         entityType: 'USER',
         entityId: id,
-        details: JSON.stringify({
-          username: existingUser.username,
-          status: status
-        }),
-        ipAddress: req.ip,
+        ipAddress: req.ip || '',
         userAgent: req.get('user-agent') || '',
       },
     });
@@ -401,10 +386,7 @@ router.delete('/users/:id', authMiddleware, isAdmin, async (req, res, next) => {
         action: 'DELETE_USER',
         entityType: 'USER',
         entityId: id,
-        details: JSON.stringify({
-          username: existingUser.username
-        }),
-        ipAddress: req.ip,
+        ipAddress: req.ip || '',
         userAgent: req.get('user-agent') || '',
       },
     });

@@ -38,21 +38,21 @@
           <v-progress-circular indeterminate color="primary"></v-progress-circular>
         </div>
 
-        <div v-else-if="prompts.length === 0" class="text-center py-4">
+        <div v-else-if="filteredPrompts.length === 0" class="text-center py-4">
           <v-icon icon="mdi-history" size="48" color="grey-lighten-1" class="mb-2"></v-icon>
           <div class="text-body-1 text-medium-emphasis">No prompts for this date</div>
         </div>
 
         <v-timeline v-else density="compact" align="start" line-thickness="1">
           <v-timeline-item
-            v-for="prompt in prompts"
+            v-for="prompt in filteredPrompts"
             :key="prompt.id"
             :dot-color="getStatusColor(prompt.status)"
             size="x-small"
             line-color="grey-lighten-3"
           >
             <template v-slot:opposite>
-              <div class="text-caption text-medium-emphasis">{{ format(new Date(prompt.timestamp), 'h:mm a') }}</div>
+              <div class="text-caption text-medium-emphasis">{{ format(new Date(prompt.createdAt), 'h:mm a') }}</div>
             </template>
 
             <v-card variant="flat" class="mb-2 rounded-lg" color="white">
@@ -67,7 +67,7 @@
                   {{ prompt.individual.firstName }} {{ prompt.individual.lastName }} - CDCR# {{ prompt.individual.cdcrNumber }}
                 </v-card-title>
                 <v-card-subtitle class="pa-0 pb-2">
-                  {{ prompt.type }}
+                  {{ prompt.promptType.name }}
                 </v-card-subtitle>
 
                 <v-chip
@@ -118,77 +118,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { format } from 'date-fns'
-
-interface Individual {
-  id: string
-  firstName: string
-  lastName: string
-  cdcrNumber: string
-}
-
-interface Prompt {
-  id: string
-  individual: Individual
-  type: string
-  status: 'SIGNED' | 'REFUSED' | 'ATTEMPTED'
-  timestamp: string
-}
+import { format, isWithinInterval, startOfDay, endOfDay, parseISO } from 'date-fns'
+import { usePromptStore } from '@/store/prompts'
 
 const router = useRouter()
+const promptStore = usePromptStore()
 
 // State
-const loading = ref(false)
-const syncing = ref(false)
 const showDatePicker = ref(false)
 const selectedDate = ref(format(new Date(), 'yyyy-MM-dd'))
+const syncing = ref(false)
 
-// Mock data - Replace with API call
-const prompts = ref<Prompt[]>([
-  {
-    id: '1',
-    individual: {
-      id: '1',
-      firstName: 'John',
-      lastName: 'Doe',
-      cdcrNumber: 'AZ1234'
-    },
-    type: 'Yard Time',
-    status: 'SIGNED',
-    timestamp: new Date().toISOString()
-  },
-  {
-    id: '2',
-    individual: {
-      id: '2',
-      firstName: 'Richard',
-      lastName: 'Smith',
-      cdcrNumber: 'BK2345'
-    },
-    type: 'Meals',
-    status: 'REFUSED',
-    timestamp: new Date().toISOString()
-  },
-  {
-    id: '3',
-    individual: {
-      id: '3',
-      firstName: 'Michael',
-      lastName: 'Jones',
-      cdcrNumber: 'CL3456'
-    },
-    type: 'Medical',
-    status: 'ATTEMPTED',
-    timestamp: new Date().toISOString()
-  }
-])
+// Computed
+const loading = computed(() => promptStore.loading)
+const filteredPrompts = computed(() => {
+  if (!selectedDate.value) return promptStore.prompts
+  
+  const start = startOfDay(parseISO(selectedDate.value))
+  const end = endOfDay(parseISO(selectedDate.value))
+  
+  return promptStore.prompts.filter(prompt => {
+    const promptDate = new Date(prompt.createdAt)
+    return isWithinInterval(promptDate, { start, end })
+  })
+})
 
 // Methods
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'SIGNED':
+    case 'COMPLETED':
       return 'success'
     case 'REFUSED':
       return 'error'
@@ -206,8 +166,7 @@ const getInitials = (firstName: string, lastName: string) => {
 const syncData = async () => {
   try {
     syncing.value = true
-    // TODO: Implement sync functionality
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    await promptStore.fetchPrompts()
   } catch (error) {
     console.error('Failed to sync:', error)
   } finally {
@@ -220,8 +179,15 @@ const navigateToRoster = () => {
 }
 
 // Lifecycle
-onMounted(() => {
-  // TODO: Fetch initial data
+onMounted(async () => {
+  try {
+    await Promise.all([
+      promptStore.fetchPromptTypes(),
+      promptStore.fetchPrompts()
+    ])
+  } catch (error) {
+    console.error('Error initializing history view:', error)
+  }
 })
 </script>
 

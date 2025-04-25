@@ -149,6 +149,7 @@ model Prompt {
   notes        String?    @db.Text
   location     String
   deviceId     String
+  signatureData String?   @db.LongText
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   individual   Individual @relation(fields: [individualId], references: [id])

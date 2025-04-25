@@ -331,7 +331,8 @@ const saveSignature = async () => {
       status: 'COMPLETED',
       notes: formattedPromptContent.value + '\n\nSignature captured electronically.',
       location: individual.value.housingUnit,
-      deviceId: 'web'
+      deviceId: 'web',
+      signatureData: signatureData
     });
     
     router.push('/history');

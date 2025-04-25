@@ -14,6 +14,15 @@ export interface ActivityLog {
     lastName: string;
     profilePicture?: string;
   };
+  detailedInfo?: {
+    individual: {
+      name: string;
+      cdcrNumber: string;
+    };
+    promptType: string;
+    category: string;
+    status: string;
+  };
 }
 
 export class ActivityService {
