@@ -42,8 +42,8 @@
             <v-list-item
               v-for="prompt in group"
               :key="prompt.id"
-              :href="`/prompts/${prompt.id}`"
-              class="py-2"
+              @click="viewPromptDetails(prompt.id)"
+              class="py-2 cursor-pointer"
               lines="three"
             >
               <template v-slot:prepend>
@@ -106,6 +106,12 @@
       </v-btn>
     </v-card-actions>
   </v-card>
+  
+  <!-- Prompt Details Panel -->
+  <prompt-details-panel
+    v-model="showPromptDetails"
+    :prompt-id="selectedPromptId"
+  />
 </template>
 
 <script setup lang="ts">
@@ -114,6 +120,7 @@ import { format, formatDistance } from 'date-fns'
 import { useRouter } from 'vue-router'
 import { usePromptStore } from '@/store/prompts'
 import type { Prompt } from '@/services/prompts.service'
+import PromptDetailsPanel from '@/components/PromptDetailsPanel.vue'
 
 // Router
 const router = useRouter()
@@ -151,6 +158,8 @@ const promptStore = usePromptStore()
 // State
 const loading = ref(false)
 let refreshTimer: number | null = null
+const showPromptDetails = ref(false)
+const selectedPromptId = ref<number | null>(null)
 
 // Computed
 const groupedPrompts = computed(() => {
@@ -261,6 +270,12 @@ const clearFilter = () => {
   emit('clear-filter')
 }
 
+// View prompt details
+const viewPromptDetails = (promptId: number) => {
+  selectedPromptId.value = promptId
+  showPromptDetails.value = true
+}
+
 // Lifecycle
 onMounted(() => {
   fetchPrompts()
@@ -293,5 +308,9 @@ defineExpose({
 
 .v-list-item:hover {
   background-color: rgba(var(--v-theme-primary), 0.04);
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 </style> 

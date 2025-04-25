@@ -160,6 +160,17 @@
                   >
                     {{ prompt.status.toLowerCase() }}
                   </v-chip>
+                  
+                  <template v-slot:append>
+                    <v-btn
+                      icon="mdi-information-outline"
+                      variant="text"
+                      color="primary"
+                      density="comfortable"
+                      size="small"
+                      @click.stop="viewPromptDetails(prompt.id)"
+                    ></v-btn>
+                  </template>
                 </v-card-item>
               </v-card>
             </v-timeline-item>
@@ -196,6 +207,12 @@
         </v-btn>
       </v-bottom-navigation>
     </v-main>
+    
+    <!-- Prompt Details Panel -->
+    <prompt-details-panel
+      v-model="showPromptDetails"
+      :prompt-id="selectedPromptId"
+    />
   </v-layout>
 </template>
 
@@ -218,6 +235,7 @@ import {
   isSameDay
 } from 'date-fns'
 import { usePromptStore } from '@/store/prompts'
+import PromptDetailsPanel from '@/components/PromptDetailsPanel.vue'
 
 const router = useRouter()
 const promptStore = usePromptStore()
@@ -232,6 +250,8 @@ const startDate = ref(format(new Date(), 'yyyy-MM-dd'))
 const endDate = ref(format(new Date(), 'yyyy-MM-dd'))
 const dateRange = ref([])
 const syncing = ref(false)
+const showPromptDetails = ref(false)
+const selectedPromptId = ref<number | null>(null)
 
 // Computed
 const loading = computed(() => promptStore.loading)
@@ -395,6 +415,12 @@ const updateDateRange = (range) => {
     startDate.value = range[0]
     endDate.value = range[1]
   }
+}
+
+// View prompt details
+const viewPromptDetails = (promptId: number) => {
+  selectedPromptId.value = promptId
+  showPromptDetails.value = true
 }
 
 // Lifecycle

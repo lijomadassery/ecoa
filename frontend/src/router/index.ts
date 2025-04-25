@@ -10,7 +10,7 @@ const Prompts = () => import('@/views/prompts/PromptsView.vue')
 const NewPrompt = () => import('@/views/prompts/NewPrompt.vue')
 const Reports = () => import('@/views/reports/ReportsView.vue')
 const Settings = () => import('@/views/settings/SettingsView.vue')
-const UserProfile = () => import('@/views/profile/UserProfile.vue')
+const UserProfile = () => import('@/views/profile/UserProfileView.vue')
 const Admin = () => import('@/views/admin/AdminView.vue')
 const AppDashboard = () => import('@/views/app-dashboard/AppDashboard.vue')
 
