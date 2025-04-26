@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model MemoryBank {
+model CommunicationNote {
   id           Int        @id @default(autoincrement())
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
@@ -24,85 +24,85 @@ model MemoryBank {
   unitId       Int?
   attachments  Json
   metadata     Json?
-  createdBy    User       @relation("CreatedMemories", fields: [createdById], references: [id])
+  createdBy    User       @relation("CreatedCommunicationNotes", fields: [createdById], references: [id])
   facility     Facility   @relation(fields: [facilityId], references: [id])
   individual   Individual @relation(fields: [individualId], references: [id])
   unit         Unit?      @relation(fields: [unitId], references: [id])
-  updatedBy    User?      @relation("UpdatedMemories", fields: [updatedById], references: [id])
+  updatedBy    User?      @relation("UpdatedCommunicationNotes", fields: [updatedById], references: [id])
 
   @@index([individualId])
   @@index([createdById])
   @@index([facilityId])
   @@index([unitId])
-  @@index([updatedById], map: "MemoryBank_updatedById_fkey")
+  @@index([updatedById], map: "CommunicationNote_updatedById_fkey")
 }
 
 model Facility {
-  id          Int          @id @default(autoincrement())
-  name        String
-  code        String       @unique
-  region      String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  individuals Individual[]
-  memoryBanks MemoryBank[]
-  units       Unit[]
-  users       User[]
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  code               String              @unique
+  region             String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  individuals        Individual[]
+  communicationNotes CommunicationNote[]
+  units              Unit[]
+  users              User[]
 }
 
 model Unit {
-  id          Int          @id @default(autoincrement())
-  name        String
-  code        String
-  facilityId  Int
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  memoryBanks MemoryBank[]
-  facility    Facility     @relation(fields: [facilityId], references: [id])
-  users       User[]
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  code               String
+  facilityId         Int
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  communicationNotes CommunicationNote[]
+  facility           Facility            @relation(fields: [facilityId], references: [id])
+  users              User[]
 
   @@unique([code, facilityId])
   @@index([facilityId], map: "Unit_facilityId_fkey")
 }
 
 model User {
-  id              Int          @id @default(autoincrement())
-  username        String       @unique
-  password        String
-  firstName       String
-  lastName        String
-  badgeNumber     String       @unique
-  role            String
-  facilityId      Int
-  unitId          Int?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  profilePicture  String?
-  auditLogs       AuditLog[]
-  createdMemories MemoryBank[] @relation("CreatedMemories")
-  updatedMemories MemoryBank[] @relation("UpdatedMemories")
-  prompts         Prompt[]
-  facility        Facility     @relation(fields: [facilityId], references: [id])
-  unit            Unit?        @relation(fields: [unitId], references: [id])
+  id                      Int                 @id @default(autoincrement())
+  username                String              @unique
+  password                String
+  firstName               String
+  lastName                String
+  badgeNumber             String              @unique
+  role                    String
+  facilityId              Int
+  unitId                  Int?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  profilePicture          String?
+  auditLogs               AuditLog[]
+  createdCommunicationNotes CommunicationNote[] @relation("CreatedCommunicationNotes")
+  updatedCommunicationNotes CommunicationNote[] @relation("UpdatedCommunicationNotes")
+  prompts                 Prompt[]
+  facility                Facility            @relation(fields: [facilityId], references: [id])
+  unit                    Unit?               @relation(fields: [unitId], references: [id])
 
   @@index([facilityId], map: "User_facilityId_fkey")
   @@index([unitId], map: "User_unitId_fkey")
 }
 
 model Individual {
-  id           Int                    @id @default(autoincrement())
-  cdcrNumber   String                 @unique
-  firstName    String
-  lastName     String
-  housingUnit  String
-  facilityId   Int
-  profilePicture String?              // URL or path to the individual's profile picture
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-  facility     Facility               @relation(fields: [facilityId], references: [id])
-  disabilities IndividualDisability[]
-  memoryBanks  MemoryBank[]
-  prompts      Prompt[]
+  id                 Int                    @id @default(autoincrement())
+  cdcrNumber         String                 @unique
+  firstName          String
+  lastName           String
+  housingUnit        String
+  facilityId         Int
+  profilePicture     String?                // URL or path to the individual's profile picture
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  facility           Facility               @relation(fields: [facilityId], references: [id])
+  disabilities       IndividualDisability[]
+  communicationNotes CommunicationNote[]
+  prompts            Prompt[]
 
   @@index([facilityId], map: "Individual_facilityId_fkey")
 }

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './auth.routes';
 import individualsRoutes from './individuals.routes';
+import communicationNotesRoutes from './communication-notes.routes';
 import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
@@ -19,7 +20,7 @@ router.use('/auth', authRoutes);
 router.use('/individuals', authMiddleware, individualsRoutes);
 router.use('/users', authMiddleware, (req, res) => res.json([]));
 router.use('/facilities', authMiddleware, (req, res) => res.json([]));
-router.use('/memory-bank', authMiddleware, (req, res) => res.json([]));
+router.use('/communication-notes', authMiddleware, communicationNotesRoutes);
 
 // Prompt types route
 router.get('/prompt-types', authMiddleware, async (req, res) => {

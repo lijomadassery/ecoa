@@ -91,6 +91,51 @@
                 </v-chip-group>
               </v-list-item-subtitle>
             </v-list-item>
+            
+            <!-- Communication Preferences Section -->
+            <v-list-item v-if="!loadingNotes">
+              <template v-slot:prepend>
+                <v-icon icon="mdi-message-text" color="primary"></v-icon>
+              </template>
+              <v-list-item-title class="d-flex align-center">
+                Communication Preferences
+                <v-btn
+                  v-if="individualNotes.length > 0"
+                  icon="mdi-pencil"
+                  size="x-small"
+                  variant="text"
+                  color="primary"
+                  class="ml-1"
+                  @click="viewAllNotes"
+                  title="View all notes"
+                ></v-btn>
+              </v-list-item-title>
+              <v-list-item-subtitle v-if="loadingNotes" class="mt-2">
+                <v-progress-linear indeterminate></v-progress-linear>
+              </v-list-item-subtitle>
+              <v-list-item-subtitle v-else-if="individualNotes.length === 0" class="fst-italic text-grey">
+                No communication notes yet
+              </v-list-item-subtitle>
+              <v-list-item-subtitle v-else>
+                <v-expansion-panels variant="accordion" class="mt-2">
+                  <v-expansion-panel>
+                    <v-expansion-panel-title class="text-body-2 py-1">
+                      <v-chip size="x-small" color="primary" class="mr-2">
+                        {{ individualNotes.length }} {{ individualNotes.length === 1 ? 'note' : 'notes' }}
+                      </v-chip>
+                      {{ getLatestNote.title }}
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text>
+                      <p class="text-body-2 mb-2">{{ getLatestNote.content }}</p>
+                      <div class="d-flex align-center text-caption text-grey">
+                        <v-icon size="small" class="mr-1">mdi-clock-outline</v-icon>
+                        {{ formatDate(getLatestNote.createdAt) }}
+                      </div>
+                    </v-expansion-panel-text>
+                  </v-expansion-panel>
+                </v-expansion-panels>
+              </v-list-item-subtitle>
+            </v-list-item>
           </v-list>
         </template>
       </v-card-text>
@@ -104,9 +149,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRosterStore } from '@/store/roster';
+import { useCommunicationNotesStore } from '@/stores/communicationNotes';
+import { useRouter } from 'vue-router';
+import { format } from 'date-fns';
 import type { Individual } from '@/types';
+import type { CommunicationNote } from '@/services/communication-notes.service';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -116,8 +165,11 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue']);
 
 const rosterStore = useRosterStore();
+const communicationNotesStore = useCommunicationNotesStore();
+const router = useRouter();
 const individual = ref<Individual | null>(null);
 const loading = ref(false);
+const loadingNotes = ref(false);
 const error = ref<string | null>(null);
 
 // Simplified facility mapping - in a real app, you would fetch this from an API
@@ -139,8 +191,26 @@ const facilityName = computed(() => {
   return facilityMap[individual.value.facilityId] || `Facility ${individual.value.facilityId}`;
 });
 
+const individualNotes = computed(() => {
+  if (!individual.value) return [];
+  return communicationNotesStore.getNotesForIndividual(Number(individual.value.id));
+});
+
+const getLatestNote = computed(() => {
+  if (individualNotes.value.length === 0) return null;
+  return individualNotes.value[0]; // Assuming notes are sorted by date desc
+});
+
 const getInitials = (firstName: string, lastName: string) => {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`;
+};
+
+const formatDate = (dateStr: string) => {
+  try {
+    return format(new Date(dateStr), 'MMM d, yyyy h:mm a');
+  } catch (e) {
+    return dateStr;
+  }
 };
 
 const fetchIndividualDetails = async () => {
@@ -150,12 +220,41 @@ const fetchIndividualDetails = async () => {
     loading.value = true;
     error.value = null;
     individual.value = await rosterStore.fetchIndividualById(props.individualId);
+    await fetchCommunicationNotes();
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load individual details';
     console.error('Error fetching individual details:', err);
   } finally {
     loading.value = false;
   }
+};
+
+const fetchCommunicationNotes = async () => {
+  if (!individual.value) return;
+  
+  try {
+    loadingNotes.value = true;
+    await communicationNotesStore.fetchNotes({ individualId: Number(individual.value.id) });
+  } catch (err) {
+    console.error('Error fetching communication notes:', err);
+  } finally {
+    loadingNotes.value = false;
+  }
+};
+
+const viewAllNotes = () => {
+  if (!individual.value) return;
+  close();
+  router.push(`/roster/${individual.value.id}`);
+  // Delay to ensure page loads before switching tabs
+  setTimeout(() => {
+    // This requires that the IndividualDetails component has an exported activeTab ref
+    // If not available, this will silently fail but navigation will still work
+    const individualDetailsComponent = document.querySelector('.individual-details');
+    if (individualDetailsComponent && individualDetailsComponent.__vue__) {
+      individualDetailsComponent.__vue__.activeTab = 'notes';
+    }
+  }, 300);
 };
 
 const close = () => {
@@ -168,6 +267,11 @@ const close = () => {
     }
   }, 300); // Small delay to wait for dialog close animation
 };
+
+onMounted(async () => {
+  // Fetch categories on component mount
+  await communicationNotesStore.fetchCategories();
+});
 
 watch(() => props.individualId, (newVal) => {
   if (newVal && showDialog.value) {
