@@ -17,7 +17,12 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://192.168.127.2:5173',
+    // Add any other URLs that need access
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -42,14 +47,18 @@ app.use('/api/prompts', promptsRoutes);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 4001;
+const HOST = '0.0.0.0'; // Listen on all interfaces
 
 async function startServer() {
   try {
     await prisma.$connect();
     console.log('Successfully connected to database');
 
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`Server is running on http://${HOST}:${PORT}`);
+      console.log('Access URLs:');
+      console.log(`Local: http://localhost:${PORT}`);
+      console.log(`Network: http://192.168.127.2:${PORT}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
