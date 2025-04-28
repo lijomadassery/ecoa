@@ -1,10 +1,9 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { authenticateToken } from '../middleware/auth';
+import { prisma } from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
+import { Prisma } from '@prisma/client';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all individuals
 router.get('/', async (req, res) => {

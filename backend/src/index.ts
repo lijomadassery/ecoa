@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './lib/prisma';
 import mainRoutes from './routes';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
@@ -13,7 +13,6 @@ import reportsRoutes from './routes/reports.routes';
 import adminRoutes from './routes/admin.routes';
 import promptsRoutes from './routes/prompts.routes';
 
-const prisma = new PrismaClient();
 const app = express();
 
 // CORS configuration
@@ -57,5 +56,16 @@ async function startServer() {
     process.exit(1);
   }
 }
+
+// Handle application shutdown and close Prisma connections
+process.on('SIGINT', async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+});
 
 startServer(); 

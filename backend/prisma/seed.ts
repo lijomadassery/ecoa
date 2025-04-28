@@ -571,10 +571,10 @@ async function main() {
       }),
     ]);
 
-    // Create memory bank entries
-    console.log('Creating memory bank entries...');
+    // Create communication notes
+    console.log('Creating communication notes...');
     await Promise.all([
-      prisma.memoryBank.create({
+      prisma.communicationNote.create({
         data: {
           title: 'Communication Preferences',
           content: 'Prefers written communication and visual cues. Responds well to gestures and facial expressions.',
@@ -594,7 +594,7 @@ async function main() {
           }
         }
       }),
-      prisma.memoryBank.create({
+      prisma.communicationNote.create({
         data: {
           title: 'Medical Appointments Protocol',
           content: 'Requires visual notification 30 minutes before medical appointments. Staff should ensure written instructions are provided.',
@@ -614,7 +614,7 @@ async function main() {
           }
         }
       }),
-      prisma.memoryBank.create({
+      prisma.communicationNote.create({
         data: {
           title: 'Hearing Aid Maintenance',
           content: 'Uses hearing aid in right ear. Requires battery replacement every 2 weeks. Keep spare batteries in medical unit.',
@@ -737,8 +737,8 @@ async function main() {
       prisma.auditLog.create({
         data: {
           userId: users[1].id,
-          action: 'MEMORY_BANK_CREATED',
-          entityType: 'MEMORY_BANK',
+          action: 'COMMUNICATION_NOTE_CREATED',
+          entityType: 'COMMUNICATION_NOTE',
           entityId: 1,
           ipAddress: '192.168.1.101',
           userAgent: 'Mozilla/5.0 (iPad; CPU OS 14_4 like Mac OS X) AppleWebKit/605.1.15',
