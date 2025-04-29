@@ -20,8 +20,8 @@ const corsOptions = {
   origin: [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'http://192.168.127.2:5173',
-    // Add any other URLs that need access
+    'http://192.168.126.11:5173',  // VPN IP
+    '*'  // Allow all VPN users to access
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -46,7 +46,7 @@ app.use('/api/prompts', promptsRoutes);
 // Error handling
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 4001;
+const PORT = Number(process.env.PORT || 4001);  // Fix TypeScript error by converting to number
 const HOST = '0.0.0.0'; // Listen on all interfaces
 
 async function startServer() {
@@ -55,10 +55,9 @@ async function startServer() {
     console.log('Successfully connected to database');
 
     app.listen(PORT, HOST, () => {
-      console.log(`Server is running on http://${HOST}:${PORT}`);
-      console.log('Access URLs:');
+      console.log('Server is running on:');
       console.log(`Local: http://localhost:${PORT}`);
-      console.log(`Network: http://192.168.127.2:${PORT}`);
+      console.log(`VPN: http://192.168.126.11:${PORT}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
