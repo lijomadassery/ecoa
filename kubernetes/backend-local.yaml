@@ -34,6 +34,10 @@ spec:
             secretKeyRef:
               name: mysql-secret
               key: password
+        - name: DATABASE_URL
+          value: "mysql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):3306/$(DB_NAME)?schema=public"
+        - name: NODE_ENV
+          value: "production"
 ---
 apiVersion: v1
 kind: Service
