@@ -13,6 +13,10 @@ spec:
       labels:
         app: backend
     spec:
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nc -z mysql 3306; do echo waiting for mysql; sleep 2; done;']
       containers:
       - name: backend
         image: backend:local
@@ -35,7 +39,7 @@ spec:
               name: mysql-secret
               key: password
         - name: DATABASE_URL
-          value: "mysql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):3306/$(DB_NAME)?schema=public"
+          value: "mysql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):3306/$(DB_NAME)?connection_limit=5&connect_timeout=30&pool_timeout=30"
         - name: NODE_ENV
           value: "production"
 ---

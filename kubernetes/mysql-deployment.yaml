@@ -38,9 +38,16 @@ spec:
         app: mysql
     spec:
       containers:
-      - image: mysql:8.0.32
+      - image: mysql-local:latest
         name: mysql
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Never
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         env:
         - name: MYSQL_DATABASE
           value: camu_ecoa_db
