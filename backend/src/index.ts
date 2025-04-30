@@ -20,7 +20,11 @@ const corsOptions = {
   origin: [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'http://192.168.126.11:5173',  // VPN IP
+    /^http:\/\/localhost:\d+$/,      // Allow any localhost port
+    /^http:\/\/127\.0\.0\.1:\d+$/,   // Allow any 127.0.0.1 port
+    'http://192.168.126.11:5173',    // VPN IP
+    'https://madasserylabs.ngrok.app',  // Specific ngrok domain
+    /\.ngrok-free\.app$/,            // Allow all ngrok domains
     '*'  // Allow all VPN users to access
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
