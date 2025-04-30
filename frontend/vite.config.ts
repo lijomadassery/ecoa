@@ -19,6 +19,10 @@ export default defineConfig({
         changeOrigin: true,
         secure: false
       }
-    }
+    },
+    // Add this section to allow the ngrok host
+    allowedHosts: [
+      'madasserylabs.ngrok.app'
+    ]
   }
 }); 
