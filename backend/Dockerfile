@@ -1,35 +1,38 @@
 # Build stage
-FROM node:18-alpine as builder
+FROM node:18-slim as builder
 
 WORKDIR /app
 
-# Update certificates and install dependencies
-RUN apk update && \
-    apk add --no-cache ca-certificates && \
-    update-ca-certificates && \
-    apk add --no-cache \
+# Set DNS resolver
+RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
+    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+
+# Install build dependencies and certificates
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     openssl \
-    openssl-dev \
-    gcc \
-    g++ \
-    make \
+    ca-certificates \
+    build-essential \
     python3 \
-    libc-dev
+    curl && \
+    update-ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Verify SSL connection
+RUN curl -v https://registry.npmjs.org/
 
 # Copy package files
 COPY package*.json ./
 
-# Configure npm
-RUN npm config set strict-ssl false
-RUN npm config set registry http://registry.npmjs.org/
-
 # Install ALL dependencies (including devDependencies)
-RUN npm install
+RUN npm config set registry http://registry.npmjs.org/ && \
+    npm config set strict-ssl false && \
+    npm install
 
 # Generate Prisma client before copying source code
 COPY prisma ./prisma
-ENV PRISMA_BINARY_PLATFORM=linux-musl
 ENV NODE_ENV=development
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 RUN npx prisma generate
 
 # Copy source code
@@ -39,31 +42,35 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine
+FROM node:18-slim
 
 WORKDIR /app
 
-# Update certificates and install runtime dependencies
-RUN apk update && \
-    apk add --no-cache ca-certificates && \
-    update-ca-certificates && \
-    apk add --no-cache openssl
+# Set DNS resolver
+RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
+    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
 
-# Configure npm
-RUN npm config set strict-ssl false
-RUN npm config set registry http://registry.npmjs.org/
+# Install runtime dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    openssl \
+    ca-certificates && \
+    update-ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy package files and install production dependencies
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm config set registry http://registry.npmjs.org/ && \
+    npm config set strict-ssl false && \
+    npm install --omit=dev
 
 # Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
 
 # Copy prisma schema and generate client
 COPY prisma ./prisma
-ENV PRISMA_BINARY_PLATFORM=linux-musl
 ENV NODE_ENV=production
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 RUN npx prisma generate
 
 # Set environment variables
