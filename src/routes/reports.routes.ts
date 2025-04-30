@@ -8,23 +8,25 @@ interface Stats {
   inProgressCount: number;
 }
 
-interface BaseData {
-  [key: string]: unknown;
+type TaskStatus = 'COMPLETED' | 'PENDING' | 'IN_PROGRESS';
+
+interface TaskStatusCount {
+  status: TaskStatus;
+  _count: {
+    status: number;
+  };
 }
 
 const router = Router();
 
 router.get('/stats', async (req: Request, res: Response) => {
   try {
-    const baseData: BaseData = { /* your base data */ };
-    const data: BaseData = { ...baseData };
-
     const result = await prisma.task.groupBy({
       by: ['status'],
       _count: {
         status: true
       }
-    });
+    }) as TaskStatusCount[];
 
     const stats: Stats = {
       totalCount: 0,
@@ -56,9 +58,9 @@ router.get('/stats', async (req: Request, res: Response) => {
       pending: stats.pendingCount,
       inProgress: stats.inProgressCount
     });
-  } catch (error) {
-    if (error instanceof Error) {
-      return res.status(500).json({ error: error.message });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return res.status(500).json({ error: err.message });
     }
     return res.status(500).json({ error: 'An unknown error occurred' });
   }

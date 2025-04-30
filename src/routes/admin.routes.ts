@@ -1,19 +1,21 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/prisma';
 
-interface AuthenticatedRequest extends Request {
-  user: {
-    id: string;
-    role: string;
-  };
+// Extend Express Request type to include user
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: {
+      id: string;
+      role: string;
+    };
+  }
 }
 
 const router = Router();
 
 // Middleware to check authentication
-const checkAuth = (req: Request, res: Response, next: Function) => {
-  const authReq = req as AuthenticatedRequest;
-  if (!authReq.user) {
+const checkAuth = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   next();
@@ -22,16 +24,15 @@ const checkAuth = (req: Request, res: Response, next: Function) => {
 // Apply authentication check to all routes
 router.use(checkAuth);
 
-// Your existing route handlers, now with proper typing
-router.post('/some-route', async (req: AuthenticatedRequest, res: Response) => {
-  // req.user is now guaranteed to exist
-  const userId = req.user.id;
+// Your existing route handlers
+router.post('/some-route', async (req: Request, res: Response) => {
+  // TypeScript now knows req.user exists because of the checkAuth middleware
+  const userId = req.user!.id;
   // ... rest of your code
 });
 
-router.put('/another-route', async (req: AuthenticatedRequest, res: Response) => {
-  // req.user is now guaranteed to exist
-  const userId = req.user.id;
+router.put('/another-route', async (req: Request, res: Response) => {
+  const userId = req.user!.id;
   // ... rest of your code
 });
 
