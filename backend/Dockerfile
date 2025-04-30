@@ -14,9 +14,6 @@ RUN apt-get update && \
     update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Verify SSL connection
-RUN curl -v https://registry.npmjs.org/
-
 # Copy package files
 COPY package*.json ./
 
@@ -71,10 +68,6 @@ ENV PORT=4001
 
 # Expose the port
 EXPOSE 4001
-
-# Add healthcheck
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:4001/health || exit 1
 
 # Start the application
 CMD ["node", "dist/index.js"] 
