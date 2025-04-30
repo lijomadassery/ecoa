@@ -3,8 +3,18 @@ FROM node:18-alpine as builder
 
 WORKDIR /app
 
-# Install OpenSSL and other required dependencies
-RUN apk add --no-cache openssl openssl-dev libc6-compat
+# Update certificates and install dependencies
+RUN apk update && \
+    apk add --no-cache ca-certificates && \
+    update-ca-certificates && \
+    apk add --no-cache \
+    openssl \
+    openssl-dev \
+    gcc \
+    g++ \
+    make \
+    python3 \
+    libc-dev
 
 # Copy package files
 COPY package*.json ./
@@ -19,6 +29,7 @@ RUN npm install
 # Generate Prisma client before copying source code
 COPY prisma ./prisma
 ENV PRISMA_BINARY_PLATFORM=linux-musl
+ENV NODE_ENV=development
 RUN npx prisma generate
 
 # Copy source code
@@ -32,8 +43,11 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install OpenSSL in production image
-RUN apk add --no-cache openssl libc6-compat
+# Update certificates and install runtime dependencies
+RUN apk update && \
+    apk add --no-cache ca-certificates && \
+    update-ca-certificates && \
+    apk add --no-cache openssl
 
 # Configure npm
 RUN npm config set strict-ssl false
@@ -49,10 +63,10 @@ COPY --from=builder /app/dist ./dist
 # Copy prisma schema and generate client
 COPY prisma ./prisma
 ENV PRISMA_BINARY_PLATFORM=linux-musl
+ENV NODE_ENV=production
 RUN npx prisma generate
 
 # Set environment variables
-ENV NODE_ENV=production
 ENV PORT=4001
 
 # Expose the port
