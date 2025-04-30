@@ -4,14 +4,18 @@ FROM node:18-alpine as builder
 WORKDIR /app
 
 # Copy package files
-COPY package.json ./
+COPY package*.json ./
 
-# Configure npm to handle SSL issues
+# Configure npm
 RUN npm config set strict-ssl false
 RUN npm config set registry http://registry.npmjs.org/
 
-# Install dependencies
+# Install ALL dependencies (including devDependencies)
 RUN npm install
+
+# Generate Prisma client before copying source code
+COPY prisma ./prisma
+RUN npx prisma generate
 
 # Copy source code
 COPY . .
@@ -24,12 +28,12 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Configure npm to handle SSL issues
+# Configure npm
 RUN npm config set strict-ssl false
 RUN npm config set registry http://registry.npmjs.org/
 
 # Copy package files and install production dependencies
-COPY package.json ./
+COPY package*.json ./
 RUN npm install --omit=dev
 
 # Copy built files from builder stage
