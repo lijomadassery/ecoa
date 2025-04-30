@@ -8,49 +8,20 @@ interface Stats {
   inProgressCount: number;
 }
 
-type TaskStatus = 'COMPLETED' | 'PENDING' | 'IN_PROGRESS';
-
-interface TaskStatusCount {
-  status: TaskStatus;
-  _count: {
-    status: number;
-  };
-}
-
 const router = Router();
 
 router.get('/stats', async (req: Request, res: Response) => {
   try {
-    const result = await prisma.task.groupBy({
-      by: ['status'],
-      _count: {
-        status: true
-      }
-    }) as TaskStatusCount[];
+    const result = await prisma.$queryRaw`
+      SELECT 
+        COUNT(*) as totalCount,
+        SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completedCount,
+        SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) as pendingCount,
+        SUM(CASE WHEN status = 'IN_PROGRESS' THEN 1 ELSE 0 END) as inProgressCount
+      FROM Task
+    `;
 
-    const stats: Stats = {
-      totalCount: 0,
-      completedCount: 0,
-      pendingCount: 0,
-      inProgressCount: 0
-    };
-
-    // Process the results and populate stats
-    result.forEach(item => {
-      const count = item._count.status;
-      switch (item.status) {
-        case 'COMPLETED':
-          stats.completedCount = count;
-          break;
-        case 'PENDING':
-          stats.pendingCount = count;
-          break;
-        case 'IN_PROGRESS':
-          stats.inProgressCount = count;
-          break;
-      }
-      stats.totalCount += count;
-    });
+    const stats = result[0] as Stats;
 
     return res.json({
       totalTasks: stats.totalCount,
@@ -58,11 +29,11 @@ router.get('/stats', async (req: Request, res: Response) => {
       pending: stats.pendingCount,
       inProgress: stats.inProgressCount
     });
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      return res.status(500).json({ error: err.message });
-    }
-    return res.status(500).json({ error: 'An unknown error occurred' });
+  } catch (error: any) {
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      message: error?.message || 'An unknown error occurred'
+    });
   }
 });
 
