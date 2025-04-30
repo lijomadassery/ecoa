@@ -1,29 +1,10 @@
-FROM debian:bullseye-slim
+FROM mariadb:10.5
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    default-mysql-server \
-    && rm -rf /var/lib/apt/lists/*
+COPY my.cnf /etc/mysql/conf.d/custom.cnf
 
-COPY my.cnf /etc/mysql/my.cnf
+ENV MYSQL_ROOT_PASSWORD=root
+ENV MYSQL_DATABASE=camu_ecoa_db
+ENV MYSQL_USER=Admin
+ENV MYSQL_PASSWORD=@Admin002
 
-# Initialize the MySQL data directory and create system tables
-RUN mkdir -p /var/run/mysqld /var/lib/mysql && \
-    chown -R mysql:mysql /var/run/mysqld /var/lib/mysql && \
-    chmod 777 /var/run/mysqld && \
-    # Initialize MySQL system tables
-    mysql_install_db --user=mysql --datadir=/var/lib/mysql && \
-    # Start MySQL server temporarily
-    mysqld --user=mysql --datadir=/var/lib/mysql & \
-    # Wait for MySQL to start
-    until mysqladmin ping 2>/dev/null; do sleep 1; done && \
-    # Initialize system tables and secure installation
-    mysql -e "CREATE USER 'root'@'%' IDENTIFIED BY 'root'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;" && \
-    # Stop MySQL
-    mysqladmin shutdown
-
-EXPOSE 3306
-
-USER mysql
-
-CMD ["mysqld", "--user=mysql", "--datadir=/var/lib/mysql"] 
+EXPOSE 3306 

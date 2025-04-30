@@ -10,17 +10,6 @@ spec:
     requests:
       storage: 1Gi
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysql-secret
-  namespace: my-app
-type: Opaque
-data:
-  username: QWRtaW4=
-  password: QEFkbWluMDAy
-  root_password: QEFkbWluMDAy
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -41,6 +30,21 @@ spec:
       - image: mysql-local:latest
         name: mysql
         imagePullPolicy: Never
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "root"
+        - name: MYSQL_DATABASE
+          value: camu_ecoa_db
+        - name: MYSQL_USER
+          value: Admin
+        - name: MYSQL_PASSWORD
+          value: "@Admin002"
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
         resources:
           requests:
             memory: "256Mi"
@@ -48,30 +52,6 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
-        env:
-        - name: MYSQL_DATABASE
-          value: camu_ecoa_db
-        - name: MYSQL_USER
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: username
-        - name: MYSQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: password
-        - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: root_password
-        ports:
-        - containerPort: 3306
-          name: mysql
-        volumeMounts:
-        - name: mysql-persistent-storage
-          mountPath: /var/lib/mysql
       volumes:
       - name: mysql-persistent-storage
         persistentVolumeClaim:
