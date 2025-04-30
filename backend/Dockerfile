@@ -1,11 +1,7 @@
 # Build stage
-FROM node:18-slim as builder
+FROM node:18-slim AS builder
 
 WORKDIR /app
-
-# Set DNS resolver
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
-    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
 
 # Install build dependencies and certificates
 RUN apt-get update && \
@@ -46,15 +42,12 @@ FROM node:18-slim
 
 WORKDIR /app
 
-# Set DNS resolver
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && \
-    echo "nameserver 8.8.4.4" >> /etc/resolv.conf
-
 # Install runtime dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     openssl \
-    ca-certificates && \
+    ca-certificates \
+    curl && \
     update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
@@ -78,6 +71,10 @@ ENV PORT=4001
 
 # Expose the port
 EXPOSE 4001
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:4001/health || exit 1
 
 # Start the application
 CMD ["node", "dist/index.js"] 
