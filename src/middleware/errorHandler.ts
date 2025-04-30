@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { Prisma } from '@prisma/client';
 
 export const errorHandler = (
   error: any,
@@ -10,9 +9,8 @@ export const errorHandler = (
   console.error('Error:', error);
 
   // Handle Prisma errors
-  if (error instanceof Error && error.constructor.name === 'PrismaClientKnownRequestError') {
-    const prismaError = error as Prisma.PrismaClientKnownRequestError;
-    if (prismaError.code === 'P2002') {
+  if (error?.name === 'PrismaClientKnownRequestError') {
+    if (error?.code === 'P2002') {
       return res.status(409).json({
         status: 'error',
         message: 'A record with this data already exists.',
@@ -21,7 +19,7 @@ export const errorHandler = (
   }
 
   // Handle validation errors
-  if (error instanceof Error && error.name === 'ValidationError') {
+  if (error?.name === 'ValidationError') {
     return res.status(400).json({
       status: 'error',
       message: error.message,
@@ -29,7 +27,7 @@ export const errorHandler = (
   }
 
   // Handle Prisma validation errors
-  if (error instanceof Error && error.constructor.name === 'PrismaClientValidationError') {
+  if (error?.name === 'PrismaClientValidationError') {
     return res.status(400).json({
       status: 'error',
       message: 'Invalid data provided.',
@@ -39,6 +37,6 @@ export const errorHandler = (
   // Default error response
   return res.status(500).json({
     status: 'error',
-    message: error instanceof Error ? error.message : 'Internal server error',
+    message: error?.message || 'Internal server error',
   });
 }; 
