@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { Prisma } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 export const errorHandler = (
-  error: Error,
+  error: Error | Prisma.PrismaClientKnownRequestError | Prisma.PrismaClientValidationError,
   req: Request,
   res: Response,
   next: NextFunction
@@ -10,9 +10,8 @@ export const errorHandler = (
   console.error('Error:', error);
 
   // Handle Prisma errors
-  if (error instanceof (Prisma as any).PrismaClientKnownRequestError) {
-    const prismaError = error as any;
-    if (prismaError.code === 'P2002') {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === 'P2002') {
       return res.status(409).json({
         status: 'error',
         message: 'A record with this data already exists.',
@@ -29,7 +28,7 @@ export const errorHandler = (
   }
 
   // Handle Prisma validation errors
-  if (error instanceof (Prisma as any).PrismaClientValidationError) {
+  if (error instanceof Prisma.PrismaClientValidationError) {
     return res.status(400).json({
       status: 'error',
       message: 'Invalid data provided.',

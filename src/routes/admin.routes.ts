@@ -1,25 +1,40 @@
-// Add this type at the top of the file
+import { Router, Request, Response } from 'express';
+import { prisma } from '../lib/prisma';
+
 interface AuthenticatedRequest extends Request {
-  user?: {
+  user: {
     id: string;
     role: string;
   };
 }
 
-// Update the route handlers to use type guards
+const router = Router();
+
+// Middleware to check authentication
+const checkAuth = (req: Request, res: Response, next: Function) => {
+  const authReq = req as AuthenticatedRequest;
+  if (!authReq.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+};
+
+// Apply authentication check to all routes
+router.use(checkAuth);
+
+// Your existing route handlers, now with proper typing
 router.post('/some-route', async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  // ... existing code ...
+  // req.user is now guaranteed to exist
+  const userId = req.user.id;
+  // ... rest of your code
 });
 
-// Update all other route handlers similarly
 router.put('/another-route', async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  // ... existing code ...
+  // req.user is now guaranteed to exist
+  const userId = req.user.id;
+  // ... rest of your code
 });
 
-// ... existing code ... 
+// ... rest of your routes
+
+export default router; 
