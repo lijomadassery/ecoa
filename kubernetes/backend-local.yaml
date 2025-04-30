@@ -15,8 +15,9 @@ spec:
     spec:
       initContainers:
       - name: wait-for-mysql
-        image: busybox:1.28
-        command: ['sh', '-c', 'until nc -z mysql 3306; do echo waiting for mysql; sleep 2; done;']
+        image: mysql-local:latest
+        imagePullPolicy: Never
+        command: ['sh', '-c', 'until mysqladmin ping -h mysql -u Admin -p@Admin002 --silent; do echo waiting for mysql; sleep 2; done']
       containers:
       - name: backend
         image: backend:local
