@@ -29,15 +29,9 @@ spec:
         - name: DB_NAME
           value: camu_ecoa_db
         - name: DB_USER
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: username
+          value: Admin
         - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: password
+          value: "@Admin002"
         - name: DATABASE_URL
           value: "mysql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):3306/$(DB_NAME)?connection_limit=5&connect_timeout=30&pool_timeout=30"
         - name: NODE_ENV
