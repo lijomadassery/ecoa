@@ -52,4 +52,5 @@ spec:
     - name: http
       port: 4001
       targetPort: 4001
-  type: ClusterIP
+      nodePort: 30001
+  type: NodePort
