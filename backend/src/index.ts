@@ -20,6 +20,8 @@ const corsOptions = {
   origin: [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
+    'http://localhost:30000',    // Add NodePort URL
+    'http://127.0.0.1:30000',    // Add NodePort URL
     /^http:\/\/localhost:\d+$/,      // Allow any localhost port
     /^http:\/\/127\.0\.0\.1:\d+$/,   // Allow any 127.0.0.1 port
     'http://192.168.126.11:5173',    // VPN IP
@@ -33,7 +35,18 @@ const corsOptions = {
 };
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", "http://localhost:4001", "http://backend:4001", "*"],
+      imgSrc: ["'self'", "data:", "blob:", "*"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    },
+  },
+}));
 app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json());
