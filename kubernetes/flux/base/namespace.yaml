@@ -1,8 +1,0 @@
-# FluxCD System Namespace
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: flux-system
-  labels:
-    name: flux-system
-    toolkit.fluxcd.io/tenant: flux-system 
