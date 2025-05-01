@@ -23,7 +23,7 @@ spec:
         image: backend:local
         imagePullPolicy: Never
         ports:
-        - containerPort: 3000
+        - containerPort: 4001
         env:
         - name: DB_HOST
           value: mysql
@@ -37,6 +37,8 @@ spec:
           value: "mysql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):3306/$(DB_NAME)?connection_limit=5&connect_timeout=30&pool_timeout=30"
         - name: NODE_ENV
           value: "production"
+        - name: PORT
+          value: "4001"
 ---
 apiVersion: v1
 kind: Service
@@ -48,6 +50,6 @@ spec:
     app: backend
   ports:
     - name: http
-      port: 3000
-      targetPort: 3000
+      port: 4001
+      targetPort: 4001
   type: ClusterIP
