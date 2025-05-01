@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: manager
-        image: fluxcd/source-controller:v1.5.0
+        image: docker.io/fluxcd/source-controller:v1.5.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090

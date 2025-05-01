@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: manager
-        image: fluxcd/helm-controller:v0.37.0
+        image: docker.io/fluxcd/helm-controller:v0.37.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080

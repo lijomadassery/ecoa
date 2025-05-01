@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: manager
-        image: fluxcd/kustomize-controller:v1.2.0
+        image: docker.io/fluxcd/kustomize-controller:v1.2.0
         imagePullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false

@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: manager
-        image: fluxcd/notification-controller:v1.2.0
+        image: docker.io/fluxcd/notification-controller:v1.2.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090
