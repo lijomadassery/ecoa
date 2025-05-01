@@ -18,8 +18,8 @@ spec:
         image: frontend:local
         imagePullPolicy: Never
         env:
-        - name: VITE_API_URL
-          value: "http://backend:3000"
+        - name: VITE_API_BASE_URL
+          value: "http://backend:3000/api"
         ports:
         - containerPort: 80
 ---
