@@ -17,6 +17,9 @@ spec:
       - name: frontend
         image: frontend:local
         imagePullPolicy: Never
+        env:
+        - name: VITE_API_URL
+          value: "http://backend:3000"
         ports:
         - containerPort: 80
 ---
@@ -31,4 +34,5 @@ spec:
   ports:
     - port: 80
       targetPort: 80
-  type: LoadBalancer
+      nodePort: 30000
+  type: NodePort
