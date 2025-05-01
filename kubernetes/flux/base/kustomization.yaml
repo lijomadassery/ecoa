@@ -1,0 +1,14 @@
+# Base Kustomization for FluxCD
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace where FluxCD components will be installed
+namespace: flux-system
+
+# Resources to be applied
+resources:
+  - namespace.yaml
+  - source-controller.yaml
+  - kustomize-controller.yaml
+  - helm-controller.yaml
+  - notification-controller.yaml 

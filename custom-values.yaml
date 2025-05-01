@@ -1,0 +1,9 @@
+registry: docker.io
+image:
+  repository: fluxcd
+defaults:
+  images:
+    source-controller: docker.io/fluxcd/source-controller:v1.5.0
+    kustomize-controller: docker.io/fluxcd/kustomize-controller:v1.2.0
+    helm-controller: docker.io/fluxcd/helm-controller:v0.37.0
+    notification-controller: docker.io/fluxcd/notification-controller:v1.2.0 

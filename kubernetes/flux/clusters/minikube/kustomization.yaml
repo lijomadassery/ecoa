@@ -1,0 +1,25 @@
+# Minikube Cluster-specific Kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reference the base configuration
+resources:
+  - ../../base
+
+# Configure images for Minikube environment
+images:
+  - name: fluxcd/source-controller
+    newName: docker.io/fluxcd/source-controller
+    newTag: v1.5.0
+  - name: fluxcd/kustomize-controller
+    newName: docker.io/fluxcd/kustomize-controller
+    newTag: v1.2.0
+  - name: fluxcd/helm-controller
+    newName: docker.io/fluxcd/helm-controller
+    newTag: v0.37.0
+  - name: fluxcd/notification-controller
+    newName: docker.io/fluxcd/notification-controller
+    newTag: v1.2.0
+
+# Add any Minikube-specific patches here if needed
+patches: [] 
