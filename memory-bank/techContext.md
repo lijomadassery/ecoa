@@ -188,4 +188,55 @@ npm run seed
 2. Caching strategy
 3. Connection pooling
 4. Rate limiting
-5. Load balancing 
+5. Load balancing
+
+## Kubernetes Deployment
+
+### Infrastructure
+- Minikube for local Kubernetes cluster
+- Docker as container runtime
+- Nginx for frontend routing and API proxying
+- Kubernetes resources in dedicated namespace
+
+### Components
+1. Frontend Service:
+   - Nginx-based container
+   - Port 80 internal, 30000 NodePort
+   - SPA routing support
+   - API proxying configuration
+
+2. Backend Service:
+   - Node.js container
+   - Port 4001
+   - Health check endpoint
+   - Database connectivity
+
+3. MySQL Service:
+   - Persistent volume storage
+   - Port 3306
+   - Initial schema setup
+   - User authentication
+
+### Automation
+1. verify-stack.sh:
+   - Docker status check
+   - Minikube verification
+   - Kubernetes resource validation
+   - Port forwarding setup
+
+2. deploy-changes.sh:
+   - Selective component deployment
+   - Image building and loading
+   - Pod replacement
+   - Deployment verification
+
+### Access Methods
+1. Port Forwarding (Development):
+   - Frontend: localhost:8080
+   - API: localhost:8080/api
+   - Automated setup via scripts
+
+2. Minikube Tunnel (Alternative):
+   - NodePort access
+   - Direct service exposure
+   - Suitable for specific use cases 
