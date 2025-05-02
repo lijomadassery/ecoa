@@ -41,19 +41,28 @@
    - ✅ Health monitoring
    - ✅ Deployment automation
 
-### Phase 3: FluxCD Integration (Active)
+### Phase 3: FluxCD Integration & CI/CD (Complete)
 1. GitHub Connectivity
    - ✅ Basic FluxCD setup
    - ✅ Token authentication
-   - 🔄 SSL certificate configuration
-   - 🔄 GitHub repository access
-   - ⏳ Automated sync testing
+   - ✅ SSL certificate configuration
+   - ✅ GitHub repository access
+   - ✅ Automated sync testing
+   - ✅ GitOps repository structure finalized
 
-2. Testing Infrastructure
-   - 🔄 Test pod configuration
-   - 🔄 SSL certificate handling
-   - ⏳ Automated health checks
-   - ⏳ Monitoring setup
+2. CI/CD Pipeline
+   - ✅ GitHub Actions workflow implemented
+   - ✅ Test, build, push, and deploy stages
+   - ✅ Docker Hub authentication working in CI/CD
+   - ✅ Dummy test scaffolding in place for frontend (Vitest) and backend (Jest)
+   - ✅ Build and push to Docker Hub verified
+   - ✅ Secure handling of Docker credentials via GitHub secrets
+
+3. Monitoring & Dashboard
+   - ✅ Prometheus deployed for metrics collection
+   - ✅ Grafana deployed for visualization
+   - ✅ Initial dashboard created (API request rate, memory usage)
+   - ✅ Monitoring stack ready for further customization
 
 ## Recent Changes
 
@@ -76,7 +85,7 @@
    - Added health verification
    - Improved troubleshooting tools
 
-### FluxCD Integration
+### FluxCD & CI/CD
 1. Token Authentication
    - Implemented GitHub token auth
    - Configured local image usage
@@ -88,6 +97,8 @@
    - Configured service monitoring
    - Implemented access logging
    - Added security verification
+
+3. CI/CD: GitHub Actions pipeline, Docker Hub integration, test scaffolding, secure secrets management
 
 ## Active Issues
 
@@ -102,6 +113,12 @@
 2. Root access requirements
 3. Certificate management
 4. GitHub token handling
+
+### Minikube Docker Certificate Issues
+- Minikube's Docker daemon may not trust Docker Hub's SSL certificates by default
+- Secure approach: add CA certs to Minikube Docker daemon and restart Docker
+- Less secure workaround: use --insecure-registry (not recommended for production)
+- Documented and ready for future troubleshooting if needed
 
 ## Active Decisions
 
@@ -137,6 +154,13 @@
    - Security context modifications needed
    - Certificate verification procedures
 
+### Active Decisions
+- Use GitHub Actions for CI/CD with test, build, push, and deploy stages
+- Use Docker Hub for image registry with secure token-based authentication
+- Maintain test scaffolding for both frontend and backend to ensure CI/CD stability
+- Use Prometheus and Grafana for monitoring and dashboarding
+- Continue to follow GitOps best practices for deployment
+
 ## Next Steps
 
 1. Complete SSL certificate configuration for GitHub access
@@ -144,6 +168,9 @@
 3. Enhance monitoring and alerting system
 4. Implement backup and restore procedures
 5. Add security hardening measures
+6. Expand test coverage for frontend and backend
+7. Enhance monitoring dashboards and alerting
+8. Focus on application features and user experience
 
 ## Known Issues
 
