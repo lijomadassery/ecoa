@@ -15,7 +15,7 @@ import promptsRoutes from './routes/prompts.routes';
 
 const app = express();
 
-// CORS configuration
+// CORS configuration. Testing
 const corsOptions = {
   origin: [
     'http://localhost:5173',
