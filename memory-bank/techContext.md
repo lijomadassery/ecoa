@@ -7,11 +7,15 @@
 - MySQL 8.0+
 - npm or yarn
 - Git
+- Docker
+- Kubernetes (Minikube)
+- FluxCD
 
 ### Local Setup
 ```bash
-# Clone repository
-git clone [repository-url]
+# Clone repositories
+git clone [repository-url] # Main application
+git clone [gitops-repository-url] # GitOps configuration
 
 # Install dependencies
 npm install
@@ -19,14 +23,16 @@ npm install
 # Set up environment variables
 cp .env.example .env
 
-# Generate Prisma client
-npm run prisma:generate
+# Start Minikube
+minikube start --driver=docker
 
-# Run database migrations
-npm run prisma:migrate
-
-# Seed database
-npm run seed
+# Configure FluxCD
+flux bootstrap github \
+  --owner=$GITHUB_USER \
+  --repository=ecoa-gitops \
+  --branch=main \
+  --path=clusters/minikube \
+  --personal
 ```
 
 ### Development Tools
@@ -63,6 +69,13 @@ npm run seed
 - InnoDB engine for transactions
 - Binary log for replication
 - Query optimization tools
+
+### Infrastructure
+- Kubernetes (Minikube)
+- Docker
+- FluxCD
+- GitHub repositories
+- SSL certificates
 
 ## Technical Constraints
 
@@ -126,6 +139,19 @@ npm run seed
 4. Performance tests
 5. Security tests
 
+### Infrastructure Testing
+1. Pod Configuration
+   - Security context validation
+   - Resource limit testing
+   - Network connectivity
+   - Volume management
+
+2. Certificate Testing
+   - SSL verification
+   - API access
+   - Trust chain validation
+   - Error handling
+
 ## Monitoring & Support
 
 ### Application Monitoring
@@ -142,6 +168,19 @@ npm run seed
 4. Health check endpoints
 5. Support documentation
 
+### Monitoring & Alerts
+1. Pod Health
+   - Status monitoring
+   - Resource usage
+   - Log analysis
+   - Event tracking
+
+2. Certificate Management
+   - Expiration monitoring
+   - Validation checks
+   - Trust chain verification
+   - Access logging
+
 ## Documentation
 
 ### Technical Documentation
@@ -157,6 +196,32 @@ npm run seed
 3. API guides
 4. Troubleshooting guides
 5. Release notes
+
+### Security Documentation
+1. Pod Security
+   - Context configuration
+   - Privilege management
+   - Access control
+   - Best practices
+
+2. Certificate Management
+   - Installation guides
+   - Verification procedures
+   - Troubleshooting steps
+   - Rotation procedures
+
+### Deployment Documentation
+1. Pod Deployment
+   - Security requirements
+   - Resource allocation
+   - Network configuration
+   - Volume management
+
+2. Certificate Setup
+   - CA installation
+   - Trust store configuration
+   - Verification testing
+   - Maintenance procedures
 
 ## Security Measures
 

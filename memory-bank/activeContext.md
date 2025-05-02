@@ -28,36 +28,80 @@
    - ✅ Resource management
    - ✅ Access configuration
 
-2. Deployment Automation
-   - ✅ Stack verification script
-   - ✅ Deployment automation
-   - ✅ Health monitoring
-   - 🔄 FluxCD integration
+2. Service Deployment
+   - ✅ MySQL deployment with persistence
+   - ✅ Backend service with health checks
+   - ✅ Frontend service with Nginx
+   - ✅ Inter-service communication
 
 3. Infrastructure Management
-   - ✅ Container builds
+   - ✅ Local image builds
    - ✅ Service networking
    - ✅ Volume management
-   - 🔄 Resource optimization
+   - ✅ Health monitoring
+   - ✅ Deployment automation
+
+### Phase 3: FluxCD Integration (Active)
+1. GitHub Connectivity
+   - ✅ Basic FluxCD setup
+   - ✅ Token authentication
+   - 🔄 SSL certificate configuration
+   - 🔄 GitHub repository access
+   - ⏳ Automated sync testing
+
+2. Testing Infrastructure
+   - 🔄 Test pod configuration
+   - 🔄 SSL certificate handling
+   - ⏳ Automated health checks
+   - ⏳ Monitoring setup
 
 ## Recent Changes
 
-### Database Schema
-1. Added MemoryBank model with:
-   - Basic fields (title, content, category)
-   - Relationships to User, Individual, Facility
-   - Metadata and attachment support
-   - Offline sync capabilities
+### Kubernetes Infrastructure
+1. Deployment Automation
+   - Added verify-stack.sh for health checks
+   - Created deploy-changes.sh for updates
+   - Implemented systematic restart procedure
+   - Configured resource monitoring
 
-2. Enhanced User model with:
-   - Role-based access control
-   - Facility and unit assignments
-   - Audit logging capabilities
+2. Service Configuration
+   - Optimized MySQL persistence
+   - Enhanced backend health checks
+   - Improved frontend routing
+   - Secured inter-service communication
 
-3. Implemented Individual model with:
-   - Disability tracking
-   - Housing unit assignment
-   - Memory bank relationships
+3. Development Workflow
+   - Streamlined local image builds
+   - Enhanced deployment scripts
+   - Added health verification
+   - Improved troubleshooting tools
+
+### FluxCD Integration
+1. Token Authentication
+   - Implemented GitHub token auth
+   - Configured local image usage
+   - Added SSL certificate handling
+   - Created test infrastructure
+
+2. Monitoring Setup
+   - Added pod health checks
+   - Configured service monitoring
+   - Implemented access logging
+   - Added security verification
+
+## Active Issues
+
+### SSL Certificate Management
+1. Certificate verification failing in pods
+2. Need root access for certificate installation
+3. Working on secure certificate distribution
+4. Testing GitHub API connectivity
+
+### Security Considerations
+1. Pod security contexts
+2. Root access requirements
+3. Certificate management
+4. GitHub token handling
 
 ## Active Decisions
 
@@ -81,37 +125,25 @@
    - Role-based access control
    - Encryption at rest and in transit
 
+4. Using Alpine-based test containers for:
+   - Minimal footprint
+   - Quick deployment
+   - Easy package management
+   - SSL testing capabilities
+
+5. SSL Certificate Strategy:
+   - Local CA certificates installation
+   - Root privilege requirements identified
+   - Security context modifications needed
+   - Certificate verification procedures
+
 ## Next Steps
 
-### Immediate Tasks
-1. Complete database migrations
-2. Implement authentication system
-3. Set up basic API endpoints
-4. Create test data seeds
-5. Configure development environment
-6. Complete FluxCD integration
-7. Setup monitoring dashboard
-8. Optimize resource usage
-9. Document deployment patterns
-
-### Short-term Goals
-1. Basic CRUD operations for all models
-2. User authentication flow
-3. Offline data synchronization
-4. Initial frontend setup
-5. Basic testing framework
-6. Staging environment setup
-7. Production infrastructure planning
-8. Security hardening
-9. Monitoring enhancement
-10. Backup strategy implementation
-
-### Medium-term Goals
-1. Complete prompt management system
-2. Implement signature capture
-3. Set up reporting dashboard
-4. Configure monitoring tools
-5. Begin user acceptance testing
+1. Complete SSL certificate configuration for GitHub access
+2. Implement automated health checks for all services
+3. Enhance monitoring and alerting system
+4. Implement backup and restore procedures
+5. Add security hardening measures
 
 ## Known Issues
 
