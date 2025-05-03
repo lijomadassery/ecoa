@@ -16,6 +16,7 @@ RUN apt-get update && \
 
 # Copy package files
 COPY package*.json ./
+COPY tsconfig.json ./
 
 # Install ALL dependencies (including devDependencies)
 RUN npm config set registry http://registry.npmjs.org/ && \
