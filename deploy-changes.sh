@@ -1,80 +1,157 @@
 #!/bin/bash
 
-# Function to rebuild and redeploy a component
-deploy_component() {
-    local component=$1
-    local dockerfile=$2
-    local label=$3
+set -e
 
-    echo "Deploying $component changes..."
-    
-    # Build new image
-    echo "Building new $component image..."
-    if ! docker build -t $component:local -f $dockerfile .; then
-        echo "⚠️  Failed to build $component image"
-        return 1
-    fi
-    
-    # Delete old pod
-    echo "Removing old $component pod..."
-    kubectl delete pod -n my-app -l app=$label --wait=false
-    
-    # Wait for new pod
-    echo "Waiting for new $component pod..."
-    kubectl wait --for=condition=ready pod -l app=$label -n my-app --timeout=120s
-}
+# Ensure we are using Minikube's Docker daemon
+if ! docker info 2>&1 | grep -q 'minikube'; then
+  echo "Switching to Minikube's Docker daemon..."
+  eval $(minikube docker-env)
+fi
+
+# Components and their Dockerfiles
+declare -A COMPONENTS
+COMPONENTS=(
+  [frontend]="Dockerfile.frontend"
+  [backend]="Dockerfile.backend"
+  [mysql-local]="Dockerfile.mysql"
+  [loki]="Dockerfile.loki"
+  [promtail]="Dockerfile.promtail"
+  [grafana]="Dockerfile.grafana"
+  [prometheus]="Dockerfile.prometheus"
+)
+
+# Namespaces for each component
+declare -A NAMESPACES
+NAMESPACES=(
+  [frontend]="my-app"
+  [backend]="my-app"
+  [mysql-local]="my-app"
+  [loki]="monitoring"
+  [promtail]="monitoring"
+  [grafana]="monitoring"
+  [prometheus]="monitoring"
+)
+
+# Labels for each component
+declare -A LABELS
+LABELS=(
+  [frontend]="frontend"
+  [backend]="backend"
+  [mysql-local]="mysql"
+  [loki]="loki"
+  [promtail]="promtail"
+  [grafana]="grafana"
+  [prometheus]="prometheus"
+)
+
+# Manifests for each component
+declare -A MANIFESTS
+MANIFESTS=(
+  [frontend]="kubernetes/frontend-local.yaml"
+  [backend]="kubernetes/backend-local.yaml"
+  [mysql-local]="kubernetes/mysql-deployment.yaml"
+  [loki]="kubernetes/monitoring/loki.yaml"
+  [promtail]="kubernetes/monitoring/loki.yaml"
+  [grafana]="kubernetes/monitoring/grafana.yaml"
+  [prometheus]="kubernetes/monitoring/prometheus.yaml"
+)
 
 # Parse command line arguments
 components=()
 while [[ $# -gt 0 ]]; do
-    case $1 in
-        --frontend)
-            components+=("frontend")
-            shift
-            ;;
-        --backend)
-            components+=("backend")
-            shift
-            ;;
-        --mysql)
-            components+=("mysql")
-            shift
-            ;;
-        --all)
-            components=("frontend" "backend" "mysql")
-            shift
-            ;;
-        *)
-            echo "Unknown option: $1"
-            echo "Usage: $0 [--frontend] [--backend] [--mysql] [--all]"
-            exit 1
-            ;;
-    esac
+  case $1 in
+    --frontend)
+      components+=("frontend")
+      shift
+      ;;
+    --backend)
+      components+=("backend")
+      shift
+      ;;
+    --mysql)
+      components+=("mysql-local")
+      shift
+      ;;
+    --loki)
+      components+=("loki")
+      shift
+      ;;
+    --promtail)
+      components+=("promtail")
+      shift
+      ;;
+    --grafana)
+      components+=("grafana")
+      shift
+      ;;
+    --prometheus)
+      components+=("prometheus")
+      shift
+      ;;
+    --all)
+      components=("frontend" "backend" "mysql-local" "loki" "promtail" "grafana" "prometheus")
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--frontend] [--backend] [--mysql] [--loki] [--promtail] [--grafana] [--prometheus] [--all]"
+      exit 1
+      ;;
+  esac
 done
 
-# If no components specified, show usage
 if [ ${#components[@]} -eq 0 ]; then
-    echo "Usage: $0 [--frontend] [--backend] [--mysql] [--all]"
-    exit 1
+  echo "Usage: $0 [--frontend] [--backend] [--mysql] [--loki] [--promtail] [--grafana] [--prometheus] [--all]"
+  exit 1
 fi
 
-# Deploy specified components
 for component in "${components[@]}"; do
-    case $component in
-        "frontend")
-            deploy_component "frontend" "Dockerfile.frontend" "frontend"
-            ;;
-        "backend")
-            deploy_component "backend" "Dockerfile.backend" "backend"
-            ;;
-        "mysql")
-            deploy_component "mysql-local" "Dockerfile.mysql" "mysql"
-            ;;
-    esac
+  dockerfile="${COMPONENTS[$component]}"
+  namespace="${NAMESPACES[$component]}"
+  label="${LABELS[$component]}"
+  manifest="${MANIFESTS[$component]}"
+
+  echo "\n--- Deploying $component ---"
+
+  # Build image
+  echo "Building $component image..."
+  if ! docker build -t $component:local -f $dockerfile .; then
+    echo "⚠️  Failed to build $component image"
+    exit 1
+  fi
+
+  # Apply manifest (create/update resource)
+  echo "Applying manifest for $component..."
+  kubectl apply -f $manifest
+
+  # Delete old pod/daemonset if exists
+  if [[ "$component" == "promtail" ]]; then
+    echo "Restarting promtail daemonset..."
+    kubectl rollout restart daemonset/promtail -n $namespace || true
+  else
+    echo "Deleting old $component pod(s)..."
+    kubectl delete pod -n $namespace -l app=$label --ignore-not-found --wait=false
+  fi
+
 done
 
-echo "✅ Deployment complete!"
+# Wait for all pods to be ready
+for component in "${components[@]}"; do
+  namespace="${NAMESPACES[$component]}"
+  label="${LABELS[$component]}"
+  if [[ "$component" == "promtail" ]]; then
+    echo "Waiting for promtail pods to be ready..."
+    kubectl rollout status daemonset/promtail -n $namespace --timeout=180s || true
+  else
+    echo "Waiting for $component pod(s) to be ready..."
+    kubectl wait --for=condition=ready pod -l app=$label -n $namespace --timeout=180s || true
+  fi
+done
+
+echo "\n✅ Deployment complete!"
 
 # Verify the health of the application
-echo -e "\nVerifying application health..."
-./verify-stack.sh 
+if [ -f ./verify-stack.sh ]; then
+  echo -e "\nVerifying application health..."
+  ./verify-stack.sh
+fi 
