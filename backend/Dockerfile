@@ -51,6 +51,7 @@ RUN apt-get update && \
 
 # Copy package files and install ALL dependencies (including devDependencies)
 COPY package*.json ./
+COPY tsconfig.json ./
 RUN npm config set registry http://registry.npmjs.org/ && \
     npm config set strict-ssl false && \
     npm install
