@@ -171,4 +171,12 @@ erDiagram
 2. Performance monitoring
 3. Usage analytics
 4. Audit logging
-5. Health checks 
+5. Health checks
+
+#### Local Deployment Automation
+- Updated deploy-changes.sh script:
+  - Auto-detects Minikube Docker context
+  - Uses correct build contexts for frontend, backend, and mysql
+  - Skips build for monitoring images (Loki, Promtail, Grafana, Prometheus)
+  - Applies manifests and restarts pods/daemonsets as needed
+  - Documents troubleshooting for image pulls and CA certs 

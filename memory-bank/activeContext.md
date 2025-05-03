@@ -84,6 +84,14 @@
    - Enhanced deployment scripts
    - Added health verification
    - Improved troubleshooting tools
+   - Refactored deploy-changes.sh to auto-detect Minikube Docker, use correct build contexts for frontend, backend, and mysql, and skip build for monitoring images.
+   - Documented workflow for Minikube image troubleshooting, CA certs, and image loading.
+   - **Troubleshooting persistent ErrImageNeverPull:**
+     - Ensure image tag in manifest matches tag in Minikube Docker exactly (e.g., mysql-local:latest)
+     - imagePullPolicy must be Never for local images
+     - Always use eval $(minikube docker-env) before building images
+     - If issue persists, restart Minikube and redeploy
+     - Sometimes deleting the deployment/replicaset and recreating is required to clear kubelet cache
 
 ### FluxCD & CI/CD
 1. Token Authentication
@@ -119,6 +127,8 @@
 - Secure approach: add CA certs to Minikube Docker daemon and restart Docker
 - Less secure workaround: use --insecure-registry (not recommended for production)
 - Documented and ready for future troubleshooting if needed
+- If Minikube is reset or a new profile is used, all local images must be rebuilt and redeployed using the updated script.
+- Monitoring images (Loki, Promtail, Grafana, Prometheus) are now deployed from manifests, not built locally.
 
 ## Active Decisions
 

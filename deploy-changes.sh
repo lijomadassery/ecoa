@@ -4,8 +4,10 @@ set -e
 
 # Ensure we are using Minikube's Docker daemon
 if ! docker info 2>&1 | grep -q 'minikube'; then
-  echo "Switching to Minikube's Docker daemon..."
-  eval $(minikube docker-env)
+  echo "❌ You are not using Minikube's Docker daemon."
+  echo "Please run: eval \\$(minikube docker-env)"
+  echo "Then re-run this script."
+  exit 1
 fi
 
 # Components and their Dockerfiles

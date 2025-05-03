@@ -48,11 +48,11 @@ RUN apt-get update && \
     update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy package files and install production dependencies
+# Copy package files and install ALL dependencies (including devDependencies)
 COPY package*.json ./
 RUN npm config set registry http://registry.npmjs.org/ && \
     npm config set strict-ssl false && \
-    npm install --omit=dev
+    npm install
 
 # Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
@@ -62,6 +62,12 @@ COPY prisma ./prisma
 ENV NODE_ENV=production
 ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 RUN npx prisma generate
+
+# Run the seed script with ts-node
+RUN npx ts-node prisma/seed.ts
+
+# Prune devDependencies for production
+RUN npm prune --production
 
 # Set environment variables
 ENV PORT=4001

@@ -164,6 +164,8 @@
 - ✅ FluxCD integration
 - ✅ CI/CD pipeline
 - ✅ Monitoring dashboard
+- **Refactored deploy-changes.sh to build images for frontend, backend, and mysql using correct build contexts, and to skip build for monitoring images (Loki, Promtail, Grafana, Prometheus).**
+- **Documented workflow for Minikube Docker context, image troubleshooting, and CA certs.**
 
 ### Staging
 - ⏳ Environment setup
