@@ -116,9 +116,26 @@ for component in "${components[@]}"; do
   # Build image only for app components
   if [[ -n "$dockerfile" ]]; then
     echo "Building $component image..."
-    if ! docker build -t $component:local -f $dockerfile .; then
-      echo "⚠️  Failed to build $component image"
-      exit 1
+    if [[ "$component" == "frontend" ]]; then
+      if ! docker build -t $component:local -f $dockerfile frontend; then
+        echo "⚠️  Failed to build $component image"
+        exit 1
+      fi
+    elif [[ "$component" == "backend" ]]; then
+      if ! docker build -t $component:local -f $dockerfile backend; then
+        echo "⚠️  Failed to build $component image"
+        exit 1
+      fi
+    elif [[ "$component" == "mysql-local" ]]; then
+      if ! docker build -t $component:local -f $dockerfile kubernetes/mysql; then
+        echo "⚠️  Failed to build $component image"
+        exit 1
+      fi
+    else
+      if ! docker build -t $component:local -f $dockerfile .; then
+        echo "⚠️  Failed to build $component image"
+        exit 1
+      fi
     fi
   else
     echo "(Skipping build for $component, using manifest image)"
