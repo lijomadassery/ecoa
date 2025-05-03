@@ -65,12 +65,10 @@ ENV NODE_ENV=production
 ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 RUN npx prisma generate
 
-# Run the seed script with ts-node
-RUN npx tsc --project tsconfig.json --outDir dist
-RUN node dist/prisma/seed.js
+# (No seed step here; seed after deployment)
 
-# Prune devDependencies for production
-RUN npm prune --production
+# Prune devDependencies for production (optional, but comment out if you want ts-node in the pod)
+# RUN npm prune --production
 
 # Set environment variables
 ENV PORT=4001
