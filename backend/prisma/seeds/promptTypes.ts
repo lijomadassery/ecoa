@@ -89,4 +89,4 @@ async function seedPromptTypes() {
   console.log('Prompt types seeding completed')
 }
 
-export { seedPromptTypes } 
+module.exports = { seedPromptTypes }; 
