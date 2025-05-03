@@ -11,13 +11,13 @@ fi
 # Components and their Dockerfiles
 declare -A COMPONENTS
 COMPONENTS=(
-  [frontend]="Dockerfile.frontend"
-  [backend]="Dockerfile.backend"
-  [mysql-local]="Dockerfile.mysql"
-  [loki]="Dockerfile.loki"
-  [promtail]="Dockerfile.promtail"
-  [grafana]="Dockerfile.grafana"
-  [prometheus]="Dockerfile.prometheus"
+  [frontend]="frontend/Dockerfile"
+  [backend]="backend/Dockerfile"
+  [mysql-local]="kubernetes/mysql/Dockerfile"
+  [loki]=""
+  [promtail]=""
+  [grafana]=""
+  [prometheus]=""
 )
 
 # Namespaces for each component
@@ -113,11 +113,15 @@ for component in "${components[@]}"; do
 
   echo "\n--- Deploying $component ---"
 
-  # Build image
-  echo "Building $component image..."
-  if ! docker build -t $component:local -f $dockerfile .; then
-    echo "⚠️  Failed to build $component image"
-    exit 1
+  # Build image only for app components
+  if [[ -n "$dockerfile" ]]; then
+    echo "Building $component image..."
+    if ! docker build -t $component:local -f $dockerfile .; then
+      echo "⚠️  Failed to build $component image"
+      exit 1
+    fi
+  else
+    echo "(Skipping build for $component, using manifest image)"
   fi
 
   # Apply manifest (create/update resource)
