@@ -1,6 +1,6 @@
-import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
-import { seedPromptTypes } from './seeds/promptTypes';
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
+const { seedPromptTypes } = require('./seeds/promptTypes');
 
 const prisma = new PrismaClient();
 
