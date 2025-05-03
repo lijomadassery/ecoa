@@ -28,7 +28,8 @@ spec:
       serviceAccountName: loki
       containers:
       - name: loki
-        image: grafana/loki:2.9.2
+        image: loki:local
+        imagePullPolicy: Never
         ports:
         - containerPort: 3100
         args:
@@ -117,7 +118,8 @@ spec:
       serviceAccountName: loki
       containers:
       - name: promtail
-        image: grafana/promtail:2.9.2
+        image: promtail:local
+        imagePullPolicy: Never
         args:
           - -config.file=/etc/promtail/config.yaml
         volumeMounts:
