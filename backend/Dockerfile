@@ -64,7 +64,7 @@ ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 RUN npx prisma generate
 
 # Run the seed script with ts-node
-RUN npx tsc prisma/seed.ts --module CommonJS --outDir dist/prisma
+RUN npx tsc --project tsconfig.json --outDir dist
 RUN node dist/prisma/seed.js
 
 # Prune devDependencies for production
