@@ -1,0 +1,157 @@
+# FluxCD SSL Certificate Issue Resolution in WSL Ubuntu with Minikube
+
+## Initial Environment Assessment
+
+We began by verifying the current state of the environment to understand the existing setup:
+
+1. Confirmed Minikube was running correctly:
+   ```
+   minikube status
+   ```
+   - Result: Control Plane, host, kubelet, apiserver all running
+   - Docker environment in-use
+
+2. Checked Kubernetes version:
+   ```
+   kubectl version
+   ```
+   - Client: v1.33.0
+   - Server: v1.32.0
+
+3. Verified FluxCD installation:
+   ```
+   flux version
+   ```
+   - Flux version: v2.5.1
+   - All controllers verified: helm-controller, kustomize-controller, notification-controller, source-controller
+
+4. Confirmed FluxCD namespace existed:
+   ```
+   kubectl get ns flux-system -o yaml
+   ```
+   - Namespace active with proper labels
+
+5. Checked running FluxCD components:
+   ```
+   kubectl get pods -n flux-system
+   ```
+   - All controllers running: helm-controller, kustomize-controller, notification-controller, source-controller
+
+## Identifying the Issue
+
+We identified the specific SSL certificate verification issue by checking GitRepository resources:
+
+```
+kubectl get gitrepositories -A
+```
+
+This revealed the error:
+```
+failed to checkout and determine revision: unable to clone 'https://github.com/lijomadassery/ecoa-gitops.git': Get "https://github.com/lijomadassery/ecoa-gitops.git/info/refs?service=git-upload-pack": tls: failed to verify certificate: x509: certificate signed by unknown authority
+```
+
+We verified that authentication credentials were correctly configured:
+```
+kubectl get secret -n flux-system flux-system -o yaml
+```
+
+## Attempted Solution via Environment Variable
+
+First, we tried the environment variable approach, creating a patch file:
+
+```bash
+cat <<EOF > source-controller-patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: source-controller
+  namespace: flux-system
+spec:
+  template:
+    spec:
+      containers:
+      - name: manager
+        env:
+        - name: GIT_SSL_NO_VERIFY
+          value: "true"
+EOF
+```
+
+When we applied the patch:
+```
+kubectl patch deployment source-controller -n flux-system --patch-file source-controller-patch.yaml
+```
+
+We discovered that the environment variable was already set by checking:
+```
+kubectl get deployment source-controller -n flux-system -o jsonpath='{.spec.template.spec.containers[0].env}'
+```
+
+Despite this, after restarting the pod, the SSL issue persisted.
+
+## Successful Certificate-Based Solution
+
+To properly resolve the issue, we implemented a CA certificate-based solution:
+
+1. Created a ConfigMap with the host system's CA certificates:
+   ```bash
+   # Create a temporary directory
+   mkdir -p /tmp/ca-certificates
+   
+   # Copy the CA certificates to the temporary directory
+   cp /etc/ssl/certs/ca-certificates.crt /tmp/ca-certificates/
+   
+   # Create a ConfigMap from the CA certificates
+   kubectl create configmap ca-certificates --from-file=/tmp/ca-certificates/ca-certificates.crt -n flux-system
+   ```
+
+2. Created a patch to mount these certificates in the source-controller pod:
+   ```bash
+   cat <<EOF > source-controller-ca-patch.yaml
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: source-controller
+     namespace: flux-system
+   spec:
+     template:
+       spec:
+         containers:
+         - name: manager
+           volumeMounts:
+           - name: ca-certificates
+             mountPath: /etc/ssl/certs/ca-certificates.crt
+             subPath: ca-certificates.crt
+             readOnly: true
+         volumes:
+         - name: ca-certificates
+           configMap:
+             name: ca-certificates
+   EOF
+   ```
+
+3. Applied the patch:
+   ```bash
+   kubectl patch deployment source-controller -n flux-system --patch-file source-controller-ca-patch.yaml
+   ```
+
+4. Verified the resolution:
+   ```bash
+   kubectl get gitrepositories -A
+   ```
+   
+   Result showed success:
+   ```
+   NAMESPACE     NAME          URL                                                AGE   READY   STATUS
+   flux-system   flux-system   https://github.com/lijomadassery/ecoa-gitops.git   38m   True    stored artifact for revision 'main@sha1:4a309a02e2c7afa00a62936ec88c487ddc48b12e'
+   ```
+
+## Key Learnings
+
+1. The `GIT_SSL_NO_VERIFY=true` environment variable approach doesn't always work in Kubernetes/FluxCD contexts, even when correctly set.
+
+2. For proper SSL certificate handling in WSL/Minikube environments, directly mounting the host system's CA certificates is more reliable.
+
+3. This approach maintains security while resolving the certificate verification issue by providing the proper trust chain rather than bypassing verification entirely.
+
+4. The ConfigMap approach is portable and can be applied to other Kubernetes components that might face similar SSL verification issues.

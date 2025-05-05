@@ -92,6 +92,10 @@
      - Always use eval $(minikube docker-env) before building images
      - If issue persists, restart Minikube and redeploy
      - Sometimes deleting the deployment/replicaset and recreating is required to clear kubelet cache
+   - **Grafana Access Tip:**
+     - If you need to open Grafana in a browser, use:
+       - `minikube service grafana -n monitoring`
+     - This command will launch the Grafana service in your default browser using Minikube's service tunneling.
 
 ### FluxCD & CI/CD
 1. Token Authentication
