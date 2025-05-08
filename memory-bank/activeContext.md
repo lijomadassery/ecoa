@@ -258,4 +258,31 @@
 2. Facility management system
 3. Medical records system
 4. Network infrastructure
-5. Hardware specifications 
+5. Hardware specifications
+
+## Nomad Setup and Full Stack Deployment (May 2025)
+
+### Recent Focus
+- Evaluated and set up HashiCorp Nomad as an alternative to Kubernetes for local development and deployment.
+- Deployed MySQL, backend, and frontend services using Docker images built and pushed via CI/CD from the Mac development environment.
+- Ensured all images are runtime-configurable (e.g., backend API URL for frontend via envsubst in Nginx).
+
+### Key Steps
+1. Installed Nomad on WSL2 and configured with Docker driver.
+2. Created Nomad job files for MySQL, backend, and frontend, mapping ports to avoid conflicts with Minikube.
+3. Used environment variables for service configuration (e.g., VITE_API_BASE_URL for frontend, DATABASE_URL for backend).
+4. Pulled images from Docker Hub after each CI/CD build.
+5. Ran Prisma migrations and seed scripts inside the backend container to populate the MySQL database.
+6. Fixed CORS issues by updating backend CORS config to allow requests from the Nomad frontend.
+
+### Issues & Fixes
+- **Port conflicts:** Resolved by using high, unique ports for Nomad jobs (e.g., 18888 for frontend).
+- **Prisma migration hangs:** Fixed by restarting the MySQL container to clear locks.
+- **CORS/network errors:** Fixed by explicitly adding the Nomad frontend's origin to backend CORS config and redeploying.
+- **Docker CMD/ENTRYPOINT issues:** Overrode Nginx's ENTRYPOINT in the frontend Dockerfile to allow custom envsubst logic.
+- **Envsubst replacing Nginx variables:** Used restricted envsubst invocation to only substitute custom variables.
+
+### Outcome
+- Successfully deployed and accessed the full stack via Nomad.
+- Frontend and backend communicate correctly; database is seeded and operational.
+- Documented all troubleshooting steps and solutions for future reference. 
