@@ -36,5 +36,6 @@ RUN apk add --no-cache gettext
 # Expose port 80
 EXPOSE 80
 
-# Use entrypoint to substitute env vars and start nginx
+ENTRYPOINT []
+
 CMD ["/bin/sh", "-c", "envsubst '\$VITE_API_BASE_URL' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"] 
