@@ -37,4 +37,4 @@ RUN apk add --no-cache gettext
 EXPOSE 80
 
 # Use entrypoint to substitute env vars and start nginx
-CMD ["/bin/sh", "-c", "envsubst < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"] 
+CMD ["/bin/sh", "-c", "envsubst '\$VITE_API_BASE_URL' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"] 
