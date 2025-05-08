@@ -27,7 +27,7 @@ const corsOptions = {
     'http://192.168.126.11:5173',    // VPN IP
     'https://madasserylabs.ngrok.app',  // Specific ngrok domain
     /\.ngrok-free\.app$/,            // Allow all ngrok domains
-    '*'  // Allow all VPN users to access
+    'http://192.168.127.2:18888'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
