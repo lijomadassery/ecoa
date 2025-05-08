@@ -28,7 +28,7 @@ FROM nginx:stable-alpine
 COPY dist/ /usr/share/nginx/html
 
 # Copy your Nginx config with the env variable placeholder
-COPY default.conf /etc/nginx/templates/default.conf.template
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
 # Install envsubst (part of gettext)
 RUN apk add --no-cache gettext
