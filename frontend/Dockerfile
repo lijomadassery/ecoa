@@ -24,8 +24,8 @@ RUN npm run build
 # Production stage
 FROM nginx:stable-alpine
 
-# Copy the built assets to nginx
-COPY dist/ /usr/share/nginx/html
+# Copy the built assets from the builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy your Nginx config with the env variable placeholder
 COPY nginx.conf /etc/nginx/templates/default.conf.template
