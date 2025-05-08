@@ -44,4 +44,7 @@ Thumbs.db
 .eslintcache
 
 # Coverage directory
-coverage/ 
+coverage/
+
+# Cypress screenshots
+frontend/cypress/screenshots/ 

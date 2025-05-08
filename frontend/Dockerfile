@@ -22,16 +22,19 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM nginx:stable-alpine
 
 # Copy the built assets to nginx
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY dist/ /usr/share/nginx/html
 
-# Copy our custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy your Nginx config with the env variable placeholder
+COPY default.conf /etc/nginx/templates/default.conf.template
+
+# Install envsubst (part of gettext)
+RUN apk add --no-cache gettext
 
 # Expose port 80
 EXPOSE 80
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"] 
+# Use entrypoint to substitute env vars and start nginx
+CMD ["/bin/sh", "-c", "envsubst < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"] 

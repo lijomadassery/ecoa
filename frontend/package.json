@@ -8,7 +8,9 @@
     "type-check": "vue-tsc",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.vue",
-    "test": "vitest"
+    "test": "vitest",
+    "test:integration": "cypress run --e2e",
+    "cypress:open": "cypress open --e2e"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
@@ -31,6 +33,7 @@
     "@vitejs/plugin-vue": "^4.2.0",
     "@vue/eslint-config-typescript": "^11.0.0",
     "@vue/test-utils": "^2.4.0",
+    "cypress": "^14.3.3",
     "eslint": "^8.42.0",
     "eslint-plugin-vue": "^9.15.0",
     "sass": "^1.87.0",
