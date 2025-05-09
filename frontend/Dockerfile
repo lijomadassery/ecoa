@@ -21,7 +21,7 @@ COPY . .
 # Build the app
 RUN npm run build
 
-# Production stage
+# Production stage -  test nginx config
 FROM nginx:stable-alpine
 
 # Copy the built assets from the builder stage
