@@ -7,8 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install --legacy-peer-deps && \
-    npm install date-fns
+RUN npm install
 
 # Copy source code
 COPY . .
