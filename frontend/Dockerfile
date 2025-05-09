@@ -33,9 +33,12 @@ COPY nginx.conf /etc/nginx/templates/default.conf.template
 # Install envsubst (part of gettext)
 RUN apk add --no-cache gettext
 
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Expose port 80
 EXPOSE 80
 
-ENTRYPOINT []
-
-CMD ["/bin/sh", "-c", "envsubst '$VITE_API_BASE_URL' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"] 
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"] 
